@@ -27,6 +27,9 @@ width: 0;
   background: #555;
 }
 
+::-webkit-tap-highlight-color: rgba(0,0,0,0);
+::-webkit-tap-highlight-color: transparent;
+
 html,
 body {
   position: absolute;
