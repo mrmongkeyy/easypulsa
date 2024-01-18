@@ -11,7 +11,7 @@
   "name": "easypulsa",
   "version": "1.0.0",
   "description": "Web topup app",
-  "main": "./server/app.js",
+  "main": "server/app.js",
   "devDependencies": {},
   "scripts": {
     "test": "node ./server/app.js"
