@@ -1259,5 +1259,112 @@ const view = {
 					}))
 			}
 		})
+	},
+	sendBroadcast(){
+		return makeElement('div',{
+			className:'smartWidth',
+			style:`
+				background:white;
+				border:1px solid gainsboro;
+				display:flex;
+				flex-direction:column;
+				overflow:hidden;
+				border-radius:10px 10px 0 0;
+			`,
+			innerHTML:`
+				<div style="
+					padding:10px;
+					height:48px;
+					border-bottom:1px solid gainsboro;
+					display:flex;
+					align-items:center;
+					justify-content:center;
+					position:relative;
+				">
+					<div style="
+						position: absolute;
+				    left: 10px;
+				    padding: 10px;
+				    width: 32px;
+				    height: 32px;
+				    cursor:pointer;
+					" id=backbutton>
+						<img src=./more/media/back.png>
+					</div>
+					<div>Kirim Broadcast</div>
+				</div>
+				<div style="
+					height:100%;
+					overflow:auto;
+					padding:10px;
+					background:whitesmoke;
+				" id=pplace>
+					<div style="
+						padding:20px;
+						background:white;
+						border-radius:10px;
+						margin-bottom:5px;
+						border:1px solid gainsboro;
+						display:flex;
+						flex-direction:column;
+						gap:10px;
+					">
+						<div>Tulis Pesan</div>
+						<div style=font-size:12px;>
+							<div style=margin-bottom:10px;display:flex;>
+								<textarea placeholder='Tulis pesan anda...'></textarea>
+							</div>
+						</div>
+						<div style="font-size:12px;color:red;">*Pesan akan dikirim ke seluruh kontak Whatsapp customer anda!</div>
+						<div style="
+							padding:15px;
+							color:white;
+							background:#8973df;
+							border-radius:10px;
+							cursor:pointer;
+							text-align:center;
+							margin-top:10px;
+						" id=savebutton>Kirim</div>
+					</div>
+				</div>
+			`,
+			close(){
+				app.topLayer.hide();
+				app.body.style.overflow = 'auto';
+				this.remove();
+			},
+			async send(){
+				const input = this.find('textarea');
+				const response = await new Promise((resolve,reject)=>{
+					cOn.post({
+						url:`${app.baseUrl}/sendbroadcast`,
+						someSettings:[['setRequestHeader','content-type','application/json']],
+						data:jsonstr({message:input.value}),
+						onload(){
+							resolve(this.getJSONResponse());
+							input.value = '';
+						}
+					})
+				})
+
+				if(response.valid)
+					return	app.showWarnings('Pesan Broadcast Berhasil Dikirim!');
+				app.showWarnings('Terjadi kesalahan!');
+			},
+			onadded(){
+				this.find('#backbutton').onclick = ()=>{
+					this.close();
+				}
+				this.find('#savebutton').onclick = ()=>{
+					this.send();
+				}
+				this.pplace = this.find('#pplace');
+				this.anim({
+					targets:this,
+					height:['0','95%'],
+					duration:1000
+				})
+			}
+		})
 	}
 }
