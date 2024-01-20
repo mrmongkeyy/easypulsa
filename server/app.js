@@ -474,6 +474,15 @@ app.post('/newfeedback',async (req,res)=>{
 	res.send('Feed back berhasil dikirim');
 })
 
+app.post('/feedbackreply',async (req,res)=>{
+	try{
+		const response = await fonnte.reply(req.fields);
+		res.json({valid:response.data.status});
+	}catch(e){
+		res.json({valid:false});
+	}
+})
+
 //functions
 
 const productRechecker = (buyyerProductCode) => {
@@ -555,6 +564,24 @@ const fonnte = {
 		    target: customerNumbers,
 		    delay:fonnteData.delayBroadcast || '2',
 		    message
+		  };
+		  const response = await axios.post(this.apiUrl, requestData, {
+	      headers: {
+	        Authorization: fonnteData.token
+	      },
+	    });
+	    resolve(response);
+		})
+	},
+	reply(param){
+		return new Promise(async (resolve,reject)=>{
+			const fonnteData = (await db.ref('fonnteData').get()).val();
+			/*
+				token, ownerNumber, messageTemplate
+			*/
+		  const requestData = {
+		    target: param.to,
+		    message:param.message
 		  };
 		  const response = await axios.post(this.apiUrl, requestData, {
 	      headers: {
