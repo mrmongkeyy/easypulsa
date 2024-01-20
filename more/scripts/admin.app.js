@@ -25,8 +25,8 @@ const app = {
 	openOrder(){
 		this.topLayer.replaceChild(view.orderPage());
 	},
-	openFeedback(){
-		this.topLayer.replaceChild(view.feedbackPage());
+	openFeedback(state){
+		this.topLayer.replaceChild(view.feedbackPage(state));
 	},
 	openPrice(){
 		this.topLayer.replaceChild(view.pricePage());
