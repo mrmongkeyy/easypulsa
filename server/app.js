@@ -141,6 +141,16 @@ app.get('/carousellist',async (req,res)=>{
 	res.json((await db.ref('admin/carousel').get()).val());
 })
 
+app.post('/sendbroadcast',async (req,res)=>{
+	try{
+		const response = await fonnte.sendBroadcast(req.fields.message);
+		res.json({valid:response.data.status});
+	}catch(e){
+		console.log(e);
+		res.json({valid:false})
+	}
+})
+
 app.post('/editbanner',async (req,res)=>{
 	let bannerUrl;let fileId;
 	const currentCarouselData = (await db.ref(`admin/carousel/${req.fields.carouselId}`).get()).val();
@@ -529,6 +539,30 @@ const fonnte = {
 	    resolve(response);
 		})
 		
+	},
+	sendBroadcast(message){
+		return new Promise(async (resolve,reject)=>{
+			const fonnteData = (await db.ref('fonnteData').get()).val();
+			/*
+				token, ownerNumber, messageTemplate
+			*/
+			let customerNumbers = '';
+			const orders = (await db.ref('orders').get()).val();
+			for(let i in orders){
+				customerNumbers += `${orders[i].products.waNotif},`;
+			}
+		  const requestData = {
+		    target: customerNumbers,
+		    delay:fonnteData.delayBroadcast || '2',
+		    message
+		  };
+		  const response = await axios.post(this.apiUrl, requestData, {
+	      headers: {
+	        Authorization: fonnteData.token
+	      },
+	    });
+	    resolve(response);
+		})
 	},
 	getMessage(commands,templateMsg){
 		let text = templateMsg;
