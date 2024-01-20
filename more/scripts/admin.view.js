@@ -31,6 +31,18 @@ const view = {
 						<img src=./more/media/back.png>
 					</div>
 					<div>Order List</div>
+					<div style="
+						position: absolute;
+				    right: 10px;
+				    padding: 10px;
+				    width: 24px;
+				    height: 24px;
+				    cursor: pointer;
+				    background: #8973df;
+				    border-radius: 5px;
+					" id=updatebutton>
+						<img src=./more/media/refreshicon.png style=width:100%;>
+					</div>
 				</div>
 				<div style="
 					height:100%;
@@ -38,7 +50,21 @@ const view = {
 					padding:10px;
 					background:whitesmoke;
 				" id=pplace>
-					
+						<div style="
+							padding:20px;
+							background:white;
+							border:1px solid gainsboro;
+							border-radius:5px;
+							display:flex;
+							gap:10px;
+							flex-direction:column;
+							margin-bottom:20px;
+						">
+							<div>Quick Search</div>
+							<div style=display:flex;>
+								<input placeholder="Gunakan Pencarian Cepat..." id=qsearch>
+							</div>
+						</div>
 				</div>
 			`,
 			close(){
@@ -46,17 +72,44 @@ const view = {
 				app.body.style.overflow = 'auto';
 				this.remove();
 			},
+			processSearch(){
+				const key = this.qsearch.value;
+				const rooms = ['products.varianName','payments.orderId','payments.dateCreate','products.status'];
+				for(let i=0;i<this.ordersels.length;i++){
+					let found = false;
+					for(let j=0;j<rooms.length;j++){
+						const commands = rooms[j].split('.');
+						if(!this.ordersels[i].orderData[commands[0]][commands[1]])
+							this.ordersels[i].orderData[commands[0]][commands[1]] = 'Menunggu Pembayaran';
+						if(this.ordersels[i].orderData[commands[0]][commands[1]].toLowerCase().search(key.toLowerCase())!==-1){
+							found = true;
+							break;
+						}
+					}
+					if(!found){
+						this.ordersels[i].hide();
+					}else this.ordersels[i].show('block');
+				}
+			},ordersels:[],
 			onadded(){
 				this.find('#backbutton').onclick = ()=>{
 					this.close();
 				}
+				this.find('#updatebutton').onclick = ()=>{
+					app.openOrder();
+				}
 				this.pplace = this.find('#pplace');
+				this.qsearch = this.find('#qsearch');
+				this.qsearch.onchange = ()=>{
+					this.processSearch();
+				}
 				this.anim({
 					targets:this,
 					height:['0','95%'],
 					duration:1000
 				})
 				this.generateOrders();
+				console.log(this.ordersels);
 			},
 			async generateOrders(){
 				const orders = objToArray(await new Promise((resolve,reject)=>{
@@ -68,8 +121,9 @@ const view = {
 					})
 				}))
 				for(let i=orders.length-1;i>0;i--){
-					this.pplace.addChild(makeElement('div',{
+					this.ordersels[i-1] = this.pplace.addChild(makeElement('div',{
 						orderId:orders[i].payments.orderId,
+						orderData:orders[i],
 						innerHTML:`
 							<div style="
 								display:flex;
@@ -90,6 +144,10 @@ const view = {
 										<div  style=display:flex;gap:10px;justify-content:space-between;>
 											<div>Status</div>
 											<div>${orders[i].payments.status === 'Pending' ? 'Menunggu Pembayaran' : orders[i].products.status}</div>
+										</div>
+										<div  style=display:flex;gap:10px;justify-content:space-between;>
+											<div>OrderId</div>
+											<div>${orders[i].payments.orderId}</div>
 										</div>
 									</div>
 								</div>
@@ -142,7 +200,7 @@ const view = {
 			}
 		})
 	},
-	feedbackPage(){
+	feedbackPage(state=false){
 		return makeElement('div',{
 			className:'smartWidth',
 			style:`
@@ -173,7 +231,7 @@ const view = {
 					" id=backbutton>
 						<img src=./more/media/back.png>
 					</div>
-					<div>Feedback's</div>
+					<div>${state ? 'Cs' : 'Orders'} Feedback's</div>
 				</div>
 				<div style="
 					overflow:auto;
@@ -183,21 +241,21 @@ const view = {
 					display:flex;
 					gap:10px;
 					color:white;
-				">
-					<div style="background:silver;padding:15px;border-radius:5px;display: flex;
+				" id=navdiv>
+					<div style="background:${state ? '#8973df' : 'silver'};padding:15px;border-radius:5px;display: flex;
 				    align-items: center;
 				    justify-content: center;
 				    cursor:pointer;width:100%;
 				    gap:10px;
-				  ">
+				  " id=orders>
 						<img src=./more/media/order.png>
 					</div>
-					<div style="background:#8973df;padding:15px;border-radius:5px;display: flex;
+					<div style="background:${!state ? '#8973df' : 'silver'};padding:15px;border-radius:5px;display: flex;
 				    align-items: center;
 				    justify-content: center;
 				    cursor:pointer;width:100%;
 				    gap:10px;
-				  ">
+				  " id=feed>
 						<img src=./more/media/customersupport.png>
 					</div>
 				</div>
@@ -215,10 +273,18 @@ const view = {
 				app.body.style.overflow = 'auto';
 				this.remove();
 			},
+			handleNavi(){
+				this.findall('#navdiv div').forEach((div)=>{
+					div.onclick = ()=>{
+						app.openFeedback(div.id !== 'orders');
+					}
+				})
+			},
 			onadded(){
 				this.find('#backbutton').onclick = ()=>{
 					this.close();
 				}
+				this.handleNavi();
 				this.pplace = this.find('#pplace');
 				this.anim({
 					targets:this,
@@ -238,42 +304,94 @@ const view = {
 				})
 				let count = 0;
 				for(let i in feedback){
-					count += 1;
-					this.pplace.addChild(makeElement('div',{
-						feedback:feedback[i],
-						style:`
-							padding:20px;
-							background:white;
-							border-radius:10px;
-							margin-bottom:5px;
-							border:1px solid gainsboro;
-							display:flex;
-							flex-direction:column;
-							gap:10px;
-						`,
-						innerHTML:`
-							<div id=ratings style="
+					if(!state && !feedback[i].timeId){
+						count += 1;
+						this.pplace.addChild(makeElement('div',{
+							feedback:feedback[i],
+							style:`
+								padding:20px;
+								background:white;
+								border-radius:10px;
+								margin-bottom:5px;
+								border:1px solid gainsboro;
 								display:flex;
+								flex-direction:column;
 								gap:10px;
-							"></div>
-							<div>
-								<div style="font-size:12px;color:gray;">"${feedback[i].feedValue}"</div>
-							</div>
-							<div>- ${i}</div>
-						`,
-						onadded(){
-							if(!this.feedback.ratevalue)
-								this.feedback.ratevalue = 5;
-							this.ratings = this.find('#ratings');
-							for(let i=0;i<5;i++){
-								this.ratings.addChild(makeElement('div',{
-									innerHTML:`
-										<img src="./more/media/${i <= this.feedback.ratevalue - 1? 'activestar' : 'inactivestar'}.png">
-									`
-								}))
+							`,
+							innerHTML:`
+								<div id=ratings style="
+									display:flex;
+									gap:10px;
+								"></div>
+								<div>
+									<div style="font-size:12px;color:gray;">"${feedback[i].feedValue}"</div>
+								</div>
+								<div>- ${i}</div>
+							`,
+							onadded(){
+								if(!this.feedback.ratevalue)
+									this.feedback.ratevalue = 5;
+								this.ratings = this.find('#ratings');
+								for(let i=0;i<5;i++){
+									this.ratings.addChild(makeElement('div',{
+										innerHTML:`
+											<img src="./more/media/${i <= this.feedback.ratevalue - 1? 'activestar' : 'inactivestar'}.png">
+										`
+									}))
+								}
 							}
-						}
-					}))
+						}))
+					}else if(state && feedback[i].timeId){
+						count += 1;
+						this.pplace.addChild(makeElement('div',{
+							feedback:feedback[i],
+							style:`
+								padding:20px;
+								background:white;
+								border-radius:10px;
+								margin-bottom:5px;
+								border:1px solid gainsboro;
+								display:flex;
+								flex-direction:column;
+								gap:10px;
+							`,
+							innerHTML:`
+								<div>From ${feedback[i].contactInfo}</div>
+								<div>
+									<div style="font-size:12px;color:gray;">"${feedback[i].feedValue}"</div>
+								</div>
+								<div style="background:gainsboro;height:1px;width:100%;margin:20px 0;"></div>
+								<div style=display:flex;>
+									<textarea placeholder="Tulis pesan reply..."></textarea>
+								</div>
+								<div style="
+									padding: 20px;
+							    text-align: center;
+							    color: white;
+							    cursor: pointer;
+							    background: #8973df;
+							    border-radius: 10px;
+								" id=sendreply>Kirim Balasan</div>
+							`,
+							onadded(){
+								this.find('#sendreply').onclick = async ()=>{
+									const response = await new Promise((resolve,reject)=>{
+										cOn.post({
+											url:`${app.baseUrl}/feedbackreply`,
+											someSettings:[['setRequestHeader','content-type','application/json']],
+											data:jsonstr({to:this.feedback.contactInfo,message:this.find('textarea').value}),
+											onload(){
+												resolve(this.getJSONResponse());
+											}
+										})
+									})
+									if(response.valid)
+										return	app.showWarnings('Balasan terkirim!');
+									app.showWarnings('Gagal mengirim balasan!');
+								}
+							}
+						}))
+					}
 				}
 				if(!objToArray(feedback).length)
 					this.pplace.addChild(makeElement('div',{
@@ -674,6 +792,12 @@ const view = {
 								<div>Token</div>
 								<div style=display:flex;>
 									<input id=fonnteData-token>
+								</div>
+							</div>
+							<div>
+								<div>Delay Broadcast</div>
+								<div style=display:flex;>
+									<input id=fonnteData-delayBroadcast>
 								</div>
 							</div>
 						</div>
