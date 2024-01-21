@@ -922,7 +922,16 @@ const view = {
 					background:white;
 				"></div>
 			`,
-			onadded(){
+			async onadded(){
+				//getting visitor data
+				const visitor = await new Promise((resolve,reject)=>{
+					cOn.get({
+						url:`${app.baseUrl}/getvisitordata`,
+						onload(){
+							resolve(this.getJSONResponse());
+						}
+					})
+				})
 				let options = {
 				  chart: {
 				    type: 'line'
@@ -931,13 +940,21 @@ const view = {
 					  curve: 'smooth',
 					},
 				  series: [{
-				    name: 'sales',
-				    data: [30,40,35,50,49,60,70,91,125]
+				    name: 'visitor',
+				    data: []
 				  }],
 				  colors:['#8973df','#8973df'],
 				  xaxis: {
-				    categories: [1991,1992,1993,1994,1995,1996,1997, 1998,1999]
+				    categories: []
 				  }
+				}
+				for(let i in visitor.data){
+					options.xaxis.categories.push(new Date(Number(i)).toLocaleString('en-US',{ timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).split(',')[0]);
+					let count = 0;
+					for(let h in visitor.data[i]){
+						count += 1;
+					}
+					options.series[0].data.push(count);
 				}
 				this.chart = new ApexCharts(this.find("#chart"), options);
 				this.chart.render();
