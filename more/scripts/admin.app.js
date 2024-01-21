@@ -1,5 +1,5 @@
 const app = {
-	baseUrl:'https://aware-blue-rooster.cyclic.app',
+	baseUrl:'http://localhost:8080',
 	body:find('body'),
 	app:find('#app'),
 	menu:find('#menu'),
@@ -35,13 +35,51 @@ const app = {
 		this.topLayer.replaceChild(view.configPage());
 	},
 	showOrderCurve(){
-		this.bodydiv.addChild(view.orderChartInfo());
+		return new Promise(async (resolve,reject)=>{
+			//getting visitor data
+			const visitor = await new Promise((resolve,reject)=>{
+				cOn.get({
+					url:`${app.baseUrl}/getordersdata`,
+					onload(){
+						resolve(this.getJSONResponse());
+					}
+				})
+			})
+			this.bodydiv.addChild(view.orderChartInfo(visitor));
+			resolve(true);	
+		})
+		
 	},
 	showVisitorCurve(){
-		this.bodydiv.addChild(view.visitorChartInfo());
+		return new Promise(async (resolve,reject)=>{
+			//getting visitor data
+				const visitor = await new Promise((resolve,reject)=>{
+					cOn.get({
+						url:`${app.baseUrl}/getvisitordata`,
+						onload(){
+							resolve(this.getJSONResponse());
+						}
+					})
+				})
+			this.bodydiv.addChild(view.visitorChartInfo(visitor));	
+			resolve(true);
+		})
+		
 	},
 	showProfitCurve(){
-		this.bodydiv.addChild(view.profitChartInfo());
+		return new Promise(async (resolve,reject)=>{
+			//getting visitor data
+			const visitor = await new Promise((resolve,reject)=>{
+				cOn.get({
+					url:`${app.baseUrl}/getordersdata`,
+					onload(){
+						resolve(this.getJSONResponse());
+					}
+				})
+			})
+			this.bodydiv.addChild(view.profitChartInfo(visitor));
+			resolve(true);	
+		})
 	},
 	openBanner(){
 		this.topLayer.replaceChild(view.bannerEdit());
@@ -52,11 +90,11 @@ const app = {
 	showStatistick(){
 		this.bodydiv.addChild(view.statistickInfo());
 	},
-	generateHomeContent(){
+	async generateHomeContent(){
 		//statistik, fonnte sended message, digi products, orders count and more.
-		this.showVisitorCurve();
-		this.showOrderCurve();
-		this.showProfitCurve();
+		await this.showVisitorCurve();
+		await this.showOrderCurve();
+		await this.showProfitCurve();
 		this.showStatistick();
 	},
 	showWarnings(message){
