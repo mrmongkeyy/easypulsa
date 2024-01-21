@@ -1,5 +1,5 @@
 const app = {
-	baseUrl:'https://aware-blue-rooster.cyclic.app',
+	baseUrl:'http://localhost:8080',
 	webtitle:find('title'),
 	headertitle:find('.bigtitle'),
 	theslogan:find('.theslogan'),
@@ -30,6 +30,8 @@ const app = {
 		this.generateBanner();
 		this.generateRandomProduct();
 		this.handleCustomerSupport();
+		//record guest
+		await this.handleVisitor();
 	},
 	menuButtonsInit(){
 		this.menuButtons.forEach(btn=>{
@@ -167,6 +169,42 @@ const app = {
 	},
 	order(){
 
+	},
+	handleVisitor(){
+		return new Promise(async (resolve,reject)=>{
+			const dateStamp = new Date().toLocaleString('en-US',{ timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).split(' ')[0] + ' 00:00:00 AM';
+			const timeString = Date.parse(dateStamp);
+			const savedStamp = JSON.parse(localStorage.getItem('easypulsaloadtime'))||{};
+			const ip = await new Promise((resolve,reject)=>{
+				cOn.get({
+					url:'https://api.ipify.org/?format=json',
+					onload(){
+						if(!this.getJSONResponse().ip)
+							return resolve(null);
+						resolve(this.getJSONResponse().ip.replaceAll('.','-'));
+					}
+				})
+			})
+			if(!ip)
+				return resolve(true);
+
+			if(!savedStamp[timeString]){
+				// send server
+				cOn.post({
+					url:`${app.baseUrl}/addmorevisitor`,
+					someSettings:[['setRequestHeader','content-type','application/json']],
+					data:jsonstr({ip,timeString}),
+					onload(){
+						const obj = {};
+						obj[timeString] = true;
+						localStorage.setItem('easypulsaloadtime',JSON.stringify(obj));
+						resolve(true);
+					}
+				})
+			}else{
+				resolve(true);
+			}
+		})
 	},
 	generateRandomProduct(){
 		const productsRandom = [];
