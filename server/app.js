@@ -231,6 +231,10 @@ app.post('/newcsfeedback',async (req,res)=>{
 app.get('/getvisitordata',async (req,res)=>{
 	res.json({data:(await db.ref('visitor').get()).val()||{}});
 })
+app.get('/getordersdata',async (req,res)=>{
+	res.json({data:(await db.ref('orders').get()).val()||{}});
+})
+
 
 app.post('/addmorevisitor',async (req,res)=>{
 	if(!req.fields.ip)
