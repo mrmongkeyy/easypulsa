@@ -228,6 +228,17 @@ app.post('/newcsfeedback',async (req,res)=>{
 	}
 })
 
+app.get('/getvisitordata',async (req,res)=>{
+	res.json({data:(await db.ref('visitor').get()).val()||{}});
+})
+
+app.post('/addmorevisitor',async (req,res)=>{
+	if(!req.fields.ip)
+		return res.json({valid:false});
+	await db.ref(`visitor/${req.fields.timeString}/${req.fields.ip}`).set(true);
+	res.json({valid:true});
+})
+
 app.post('/dopayment',async (req,res)=>{
 
 	//make sure to check newest status of the product.
