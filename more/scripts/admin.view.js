@@ -868,7 +868,7 @@ const view = {
 			}
 		})
 	},
-	orderChartInfo(){
+	orderChartInfo(orders){
 		return makeElement('div',{
 			style:`
 				width: 100%;
@@ -893,20 +893,31 @@ const view = {
 					  curve: 'smooth',
 					},
 				  series: [{
-				    name: 'sales',
-				    data: [30,40,35,50,49,60,70,91,125]
+				    name: 'order',
+				    data: []
 				  }],
 				  colors:['#8973df','#8973df'],
 				  xaxis: {
-				    categories: [1991,1992,1993,1994,1995,1996,1997, 1998,1999]
+				    categories: []
 				  }
+				}
+				const data = {};
+				for(let i in orders.data){
+					let date = new Date(Number(i)).toLocaleString('en-US',{ timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).split(',')[0];
+					if(!data[date])
+						data[date] = 1;
+					else data[date] += 1;
+				}
+				for(let i in data){
+					options.series[0].data.push(data[i]);
+					options.xaxis.categories.push(i);
 				}
 				this.chart = new ApexCharts(this.find("#chart"), options);
 				this.chart.render();
 			}
 		})
 	},
-	visitorChartInfo(){
+	visitorChartInfo(visitor){
 		return makeElement('div',{
 			style:`
 				width: 100%;
@@ -922,16 +933,7 @@ const view = {
 					background:white;
 				"></div>
 			`,
-			async onadded(){
-				//getting visitor data
-				const visitor = await new Promise((resolve,reject)=>{
-					cOn.get({
-						url:`${app.baseUrl}/getvisitordata`,
-						onload(){
-							resolve(this.getJSONResponse());
-						}
-					})
-				})
+			onadded(){
 				let options = {
 				  chart: {
 				    type: 'line'
@@ -961,7 +963,7 @@ const view = {
 			}
 		})
 	},
-	profitChartInfo(){
+	profitChartInfo(orders){
 		return makeElement('div',{
 			style:`
 				width: 100%;
@@ -986,14 +988,27 @@ const view = {
 					  curve: 'smooth',
 					},
 				  series: [{
-				    name: 'sales',
-				    data: [30,40,35,50,49,60,70,91,125]
+				    name: 'profit',
+				    data: []
 				  }],
 				  colors:['#8973df','#8973df'],
 				  xaxis: {
-				    categories: [1991,1992,1993,1994,1995,1996,1997, 1998,1999]
+				    categories: []
 				  }
 				}
+
+				const data = {};
+				for(let i in orders.data){
+					let date = new Date(Number(i)).toLocaleString('en-US',{ timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).split(',')[0];
+					data[date] = 0;
+					if(orders.data.digiresponse && orders.data.digiresponse.status === 'Sukses')
+						data[date] += orders.data[i].products.profit;
+				}
+				for(let i in data){
+					options.series[0].data.push(data[i]);
+					options.xaxis.categories.push(i);
+				}
+
 				this.chart = new ApexCharts(this.find("#chart"), options);
 				this.chart.render();
 			}
