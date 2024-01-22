@@ -344,7 +344,7 @@ const view = {
 					}else if(state && feedback[i].timeId){
 						count += 1;
 						this.pplace.addChild(makeElement('div',{
-							feedback:feedback[i],
+							feedback:feedback[i],i,
 							style:`
 								padding:20px;
 								background:white;
@@ -379,14 +379,16 @@ const view = {
 										cOn.post({
 											url:`${app.baseUrl}/feedbackreply`,
 											someSettings:[['setRequestHeader','content-type','application/json']],
-											data:jsonstr({to:this.feedback.contactInfo,message:this.find('textarea').value}),
+											data:jsonstr({feedId:this.i,to:this.feedback.contactInfo,message:this.find('textarea').value}),
 											onload(){
 												resolve(this.getJSONResponse());
 											}
 										})
 									})
-									if(response.valid)
-										return	app.showWarnings('Balasan terkirim!');
+									if(response.valid){
+										app.showWarnings('Balasan terkirim!');
+										return this.remove();
+									}
 									app.showWarnings('Gagal mengirim balasan!');
 								}
 							}
@@ -1318,13 +1320,14 @@ const view = {
 									width:100%;
 									height:100%;
 									object-fit:cover;
+									border-radius:5px;
 								" id=imgPreview>
 								<div style="
 									background:silver;
 									position:absolute;
 									top:0;right:0;
 									padding:10px;
-									border-radius: 0 0 0 15px;
+									border-radius: 0 5px 0 15px;
 									cursor:pointer;
 								" id=newImageButton>
 									<img src=./more/media/refreshicon.png style="
@@ -1465,7 +1468,7 @@ const view = {
 						flex-direction:column;
 						gap:10px;
 					">
-						<div>Tulis Pesan</div>
+						<div style=font-weight:bold;>Tulis Pesan</div>
 						<div style=font-size:12px;>
 							<div style=margin-bottom:10px;display:flex;>
 								<textarea placeholder='Tulis pesan anda...'></textarea>
