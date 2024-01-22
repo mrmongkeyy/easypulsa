@@ -1,5 +1,5 @@
 const app = {
-	baseUrl:'http://localhost:8080',
+	baseUrl:'https://aware-blue-rooster.cyclic.app',
 	body:find('body'),
 	app:find('#app'),
 	menu:find('#menu'),
