@@ -110,6 +110,12 @@ const app = {
 	openFeedBackSender(param){
 		this.body.addChild(view.feedBack(param));
 	},
+	openGuaranteeType(param){
+		this.body.addChild(view.guaranteeType(param));
+	},
+	getSaldoId(){
+		this.body.addChild(view.getSaldoId());
+	},
 	clearHistory(){
 		const sure = confirm('Sistem akan menghapus histori transaksi anda! Apakah anda yakin?');
 		if(sure){
