@@ -492,10 +492,37 @@ app.post('/newfeedback',async (req,res)=>{
 app.post('/feedbackreply',async (req,res)=>{
 	try{
 		const response = await fonnte.reply(req.fields);
+		if(response.data.status)
+			await db.ref(`feedback/${req.fields.feedId}`).remove();
 		res.json({valid:response.data.status});
 	}catch(e){
 		res.json({valid:false});
 	}
+})
+
+app.get('/saldoclaim',async (req,res)=>{
+	const orderData = (await db.ref(`orders/${req.query.orderId}`).get()).val();
+	if(orderData.payments.status != 'Success'){
+		return res.json({valid:false,message:'Order tidak mendapat garansi!'});
+	}
+	if(orderData.products.status === 'Sukses'){
+		return res.json({valid:false,message:'Order tidak mendapat garansi!'});
+	}
+	if((await db.ref(`claimedsaldo/${req.query.orderId}`).get()).val())
+		return res.json({valid:false,message:'Saldo sudah diklaim!'});
+	await db.ref(`claimedsaldo/${req.query.orderId}`).set(true);
+	const saldoId = req.query.saldoId || new Date().getTime();
+	let saldo = (await db.ref(`saldo/${saldoId}`).get()).val()||0;
+	saldo += orderData.products.price;
+	await db.ref(`saldo/${saldoId}`).set(saldo);
+	res.json({valid:true,message:'Saldo berhasil diklaim!',saldoId});
+})
+
+app.get('/guaranteesaldo',async (req,res)=>{
+	const price = (await db.ref(`saldo/${req.query.saldoId}`).get()).val();
+	if(!price)
+		return res.json({valid:false});
+	res.json({valid:true,price});
 })
 
 //functions
