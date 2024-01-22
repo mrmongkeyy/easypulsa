@@ -496,9 +496,21 @@ const view = {
 							<div style=margin-bottom:10px;>Status</div>
 							<div style=display:flex;><input value="${param.payments.status === 'Pending' ? 'Menunggu Pembayaran' : param.products.status === 'Processing' ? 'Sedang di proses' : param.products.status === 'Success' ? 'Berhasil' : 'Gagal'}"></div>
 						</div>
-						<div>
+						<div style=margin-bottom:20px;>
 							<div style=margin-bottom:10px;>Waktu Pemesanan</div>
 							<div style=display:flex;><input value="${param.payments.dateCreate}"></div>
+						</div>
+						<div>
+							<div style=margin-bottom:10px;>Klaim Garansi</div>
+							<div style="
+								padding: 20px;
+						    color:  ${param.payments.status === 'Pending' ? 'black' : param.products.status === 'Processing' ? 'black' : param.products.status === 'Success' ? 'white' : 'black'};
+						    border-radius: 10px;
+						    border:1px solid gainsboro;
+						    background: ${param.payments.status === 'Pending' ? 'whitesmoke' : param.products.status === 'Processing' ? 'whitesmoke' : param.products.status === 'Success' ? '#8973df' : 'whitesmoke'};
+						    text-align: center;
+						    cursor: ${param.payments.status === 'Pending' ? 'not-allowed' : param.products.status === 'Processing' ? 'not-allowed' : param.products.status === 'Success' ? 'pointer' : 'not-allowed'};
+							" id=guaranteebutton>${param.payments.status === 'Pending' ? 'Tidak Tersedia' : param.products.status === 'Processing' ? 'Tidak Tersedia' : param.products.status === 'Success' ? 'Klaim' : 'Tidak Tersedia'}</div>
 						</div>
 					</div>
 					<div style="
@@ -608,7 +620,6 @@ const view = {
 				this.remove();
 			},
 			onadded(){
-				console.log(param);
 				if(param2)
 					app.pushNewTransactionData(param);
 				this.find('#backbutton').onclick = ()=>{
@@ -620,6 +631,9 @@ const view = {
 				}
 				this.find('#givefeedback').onclick = ()=>{
 					app.openFeedBackSender(param.payments.orderId);
+				}
+				this.find('#guaranteebutton').onclick = ()=>{
+					app.openGuaranteeType(param);
 				}
 				this.find('#refreshbutton').onclick = async ()=>{
 					const response = await new Promise((resolve,reject)=>{
@@ -711,6 +725,39 @@ const view = {
 					padding:10px;
 					background:whitesmoke;
 				" id=itemsparent>
+				<div>
+						<div style="
+							padding:20px;
+							border:1px solid gainsboro;
+							background:white;
+							border-radius:10px;
+							margin-bottom:10px;
+							display: flex;
+					    justify-content: space-between;
+					    align-items: center;
+						">
+							<div>
+								<div style=margin-bottom:10px;font-weight:bold;>Saldo Garansi</div>
+								<div style=display:flex;gap:10px; id=saldoguarantee>
+									Rp. 0
+								</div>
+							</div>
+							<div style="
+								padding: 10px;
+						    background: #8973df;
+						    width: 32px;
+						    height: 32px;
+						    display: flex;
+						    align-items: center;
+						    justify-content: center;
+						    border-radius: 5px;
+						    cursor: pointer;
+							" id=updatemysaldo>
+								<img src=./more/media/refreshicon.png>
+							</div>
+						</div>
+						<div style="margin:10px 10px;font-weight:9px;color:gray;text-decoration:underline;cursor:pointer;" id=reset>Reset SaldoId</div>
+					</div>
 					<div>
 						<div style="
 							padding:20px;
@@ -719,7 +766,7 @@ const view = {
 							border-radius:10px;
 							margin-bottom:10px;
 						">
-							<div style=margin-bottom:10px;>Cek Pesanan</div>
+							<div style=margin-bottom:10px;font-weight:bold;>Cek Pesanan</div>
 							<div style=display:flex;gap:10px;>
 								<div style=display:flex;width:100%;>
 									<input placeholder="Masukan / Paste orderId anda!" id=pasteid>
@@ -747,16 +794,29 @@ const view = {
 			},
 			handleNav(){
 				this.findall('#menu div').forEach(btn=>{
-					console.log('called');
 					btn.onclick = ()=>{
 						app[`open${btn.id}`]();
 					}
 				})
 			},
-			onadded(){
+			updatemysaldo(){
+				/*
+					getting saved saldo id.
+					! get saldo id.
+
+				*/
+				const saldoId = localStorage.getItem('saldoId');
+				if(!saldoId){
+					app.showWarnings('SaldoId tidak ditemukan!')
+					return app.getSaldoId();
+				}
+				app.openHistory();
+			},
+			async onadded(){
 				//loading the data.
 				this.pasteid = this.find('#pasteid');
 				this.itemsparent = this.find('#itemsparent');
+				this.saldo = this.find('#saldoguarantee');
 				this.trxData = (JSON.parse(localStorage.getItem('easypulsatransactionhistories'))||[]).sort((a,b)=>{
 					return Date.parse(b.payments.dateCreate) - Date.parse(a.payments.dateCreate);
 				});
@@ -765,6 +825,12 @@ const view = {
 				}
 				this.find('#opensettingsbutton').onclick = ()=>{
 					app.openTransactionHistoriesSettings();
+				}
+				this.find('#updatemysaldo').onclick = ()=>{
+					this.updatemysaldo();
+				}
+				this.find('#reset').onclick = ()=>{
+					app.getSaldoId();
 				}
 				this.find('#forceCheckingButton').onclick = async ()=>{
 					if(!this.pasteid.value.length)
@@ -778,11 +844,11 @@ const view = {
 							}
 						})
 					})
-					console.log(response);
 					if(!response.valid)
 						return app.showWarnings('Maaf, mohon periksa kembali data orderId anda!');
 					app.openPaymentDetails(response.data);
 				}
+				await this.showsaldo();
 				this.handleNav();
 				this.anim({
 					targets:this,
@@ -790,6 +856,28 @@ const view = {
 					duration:1000
 				})
 				this.generateHistoriesItem();
+			},
+			showsaldo(){
+				return new Promise((resolve,reject)=>{
+					const saldo = this.saldo;
+					const saldoId = localStorage.getItem('saldoId');
+					if(!saldoId){
+						saldo.innerText = 'Rp. 0';
+						resolve();
+					}
+					cOn.get({
+						url:`${app.baseUrl}/guaranteesaldo?saldoId=${saldoId}`,
+						onload(){
+							const response = this.getJSONResponse();
+							if(!response.valid){
+								saldo.innerText = 'Rp. 0';
+							}else{
+								saldo.innerText = `Rp. ${getPrice(response.price)}`;
+							}
+							resolve();
+						}
+					})
+				})
 			},
 			generateHistoriesItem(){
 				this.trxData.forEach( data => {
@@ -1106,6 +1194,10 @@ const view = {
 											border:none;
 											border-radius:0 0 10px 10px;
 											margin-bottom:10px;cursor:unset;
+											background:whitesmoke;
+											color:black;
+											border:1px solid gainsboro;
+											border-top:0;
 										">${' '+brand}</div>
 									`,
 									onclick(){
@@ -1256,6 +1348,10 @@ const view = {
 											border:none;
 											border-radius:0 0 10px 10px;
 											margin-bottom:10px;cursor:unset;
+											background:whitesmoke;
+											color:black;
+											border:1px solid gainsboro;
+											border-top:0;
 										">${category+' '+brand}</div>
 									`,
 									onclick(){
@@ -1407,6 +1503,10 @@ const view = {
 											border:none;
 											border-radius:0 0 10px 10px;
 											margin-bottom:10px;cursor:unset;
+											background:whitesmoke;
+											color:black;
+											border:1px solid gainsboro;
+											border-top:0;
 										">${'Data '+brand}</div>
 									`,
 									onclick(){
@@ -1557,6 +1657,10 @@ const view = {
 											border:none;
 											border-radius:0 0 10px 10px;
 											margin-bottom:10px;cursor:unset;
+											background:whitesmoke;
+											color:black;
+											border:1px solid gainsboro;
+											border-top:0;
 										">${brand}</div>
 									`,
 									onclick(){
@@ -1707,6 +1811,10 @@ const view = {
 											border:none;
 											border-radius:0 0 10px 10px;
 											margin-bottom:10px;cursor:unset;
+											background:whitesmoke;
+											color:black;
+											border:1px solid gainsboro;
+											border-top:0;
 										">${brand}</div>
 									`,
 									onclick(){
@@ -1771,8 +1879,10 @@ const view = {
 				                padding: 15px;
 				                width: 100%;
 				                text-align: center;
-				                background: #8973df;
-				                color: white;
+				                background: whitesmoke;
+				                color: black;
+				                border-top:1px solid gainsboro;
+				                font-weight:bold;
 				              ">${category + ' ' +brand}</div>
 				            </div>
 									`,
@@ -2062,6 +2172,172 @@ const view = {
 					app.showWarnings('Berhasil mengirim keluhan!');
 					this.remove();
 				}else app.showWarnings('Terjadi kesalahan! moho coba lagi nanti');
+			}
+		})
+	},
+	guaranteeType(order){
+		return makeElement('div',{
+			style:`
+				z-index:16;
+				background:rgb(245 245 245 / 86%);
+				position:fixed;
+				top:0;
+				left:0;
+				width:100%;
+				height:100%;
+				display:flex;
+				justify-content:center;
+			`,
+			innerHTML:`
+				<div class=smartWidth style=margin-top:30px;>
+					<div style="
+						background:white;
+						padding:20px;
+						border-radius:5px;
+						border:1px solid gainsboro;
+					">
+						<div style="
+							padding-bottom:20px;
+							border-bottom:1px solid gainsboro;
+							display:flex;
+							align-items:center;
+							justify-content:center;
+							position:relative;
+							border-radius:10px 10px 0 0;
+							margin-bottom:20px;
+						">
+							<div style="
+								position:absolute;
+								left:0;cursor:pointer;
+							" id=backbutton>
+								<img src=./more/media/back.png>
+							</div>
+							<div>Klaim Garansi</div>
+						</div>
+						<div style="
+							padding:20px;
+							background:#8973df;
+							color:white;
+							border-radius:10px;
+							text-align:center;
+							cursor:pointer;
+							margin-bottom:10px;
+						" id=reorderbutton>Order Ulang</div>
+						<div style="
+							padding:20px;
+							background:#8973df;
+							color:white;
+							border-radius:10px;
+							text-align:center;
+							cursor:pointer;
+						" id=claimsaldo>Klaim Saldo</div>
+					</div>
+				</div>
+			`,
+			onadded(){
+				this.find('#backbutton').onclick = ()=>{
+					this.remove();
+				}
+				this.find('#reorderbutton').onclick = ()=>{
+					this.doReorder();
+				}
+				this.find('#claimsaldo').onclick = ()=>{
+					this.claimSaldo();
+				}
+			},
+			doReorder(){
+				console.log(orderId);
+			},
+			async claimSaldo(){
+				const response = await new Promise((resolve,reject)=>{
+					cOn.get({
+						url:`${app.baseUrl}/saldoclaim?orderId=${order.payments.orderId}&&saldoId=${localStorage.getItem('saldoId')||''}`,
+						onload(){
+							resolve(this.getJSONResponse());
+						}
+					})
+				})
+				if(!response.valid){
+					return app.showWarnings(response.message);
+				}
+				localStorage.setItem('saldoId',response.saldoId);
+				app.showWarnings('Saldo berhasil diklaim!');
+				this.remove();
+			}
+		})
+	},
+	getSaldoId(){
+		return makeElement('div',{
+			style:`
+				z-index:16;
+				background:rgb(245 245 245 / 86%);
+				position:fixed;
+				top:0;
+				left:0;
+				width:100%;
+				height:100%;
+				display:flex;
+				justify-content:center;
+			`,
+			innerHTML:`
+				<div class=smartWidth style=margin-top:30px;>
+					<div style="
+						background:white;
+						padding:20px;
+						border-radius:5px;
+						border:1px solid gainsboro;
+					">
+						<div style="
+							padding-bottom:20px;
+							border-bottom:1px solid gainsboro;
+							display:flex;
+							align-items:center;
+							justify-content:center;
+							position:relative;
+							border-radius:10px 10px 0 0;
+							margin-bottom:20px;
+						">
+							<div style="
+								position:absolute;
+								left:0;cursor:pointer;
+							" id=backbutton>
+								<img src=./more/media/back.png>
+							</div>
+							<div>Masukan SaldoId Anda!</div>
+						</div>
+						<div style="
+							border-radius:10px;
+							text-align:center;
+							cursor:pointer;
+							margin-bottom:10px;
+							display:flex;
+						" id=reorderbutton>
+							<input placeholder="Masukan saldoId anda...">
+						</div>
+						<div style="margin:15px 0;font-size:12px;color:red">Anda dapat menggunakan saldo ini untuk bertransaksi.</div>
+						<div style="
+							padding:15px;
+							background:#8973df;
+							color:white;
+							border-radius:10px;
+							text-align:center;
+							cursor:pointer;
+						" id=claimsaldo>Simpan</div>
+					</div>
+				</div>
+			`,
+			onadded(){
+				this.find('#backbutton').onclick = ()=>{
+					this.remove();
+				}
+				this.find('#claimsaldo').onclick = ()=>{
+					const saldoId = this.find('input').value;
+					if(saldoId.length < 13 || isNaN(saldoId))
+						return app.showWarnings('Periksa kembali saldoId anda!');
+					localStorage.setItem('saldoId',saldoId);
+					app.openHistory();
+					this.remove();
+				}
 			}
 		})
 	}
