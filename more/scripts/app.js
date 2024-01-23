@@ -1,5 +1,6 @@
 const app = {
 	baseUrl:'https://aware-blue-rooster.cyclic.app',
+	usernameCheckerUrl:'https://api.kitadigital.my.id/api/game',
 	webtitle:find('title'),
 	headertitle:find('.bigtitle'),
 	theslogan:find('.theslogan'),
