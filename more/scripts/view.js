@@ -704,6 +704,10 @@ const view = {
 					app.openFeedBackSender(param.payments.orderId);
 				}
 				this.find('#guaranteebutton').onclick = ()=>{
+					//add some logic to this.
+					if(param.payments.status === 'Success' && param.products.status && param.products.status !== 'Sukses')
+						app.openGuaranteeType(param);
+					else app.showWarnings('Garansi tidak tersedia!');
 					app.openGuaranteeType(param);
 				}
 				this.find('#refreshbutton').onclick = async ()=>{
@@ -2316,8 +2320,27 @@ const view = {
 					this.claimSaldo();
 				}
 			},
-			doReorder(){
-				console.log(orderId);
+			async doReorder(){
+				//we gonna make new request order.
+				const reorderData = order;
+				reorderData.reorder = true;
+				const results = await new Promise((resolve,reject)=>{
+					cOn.post({
+						url:`${app.baseUrl}/dopayment`,
+						someSettings:[['setRequestHeader','Content-type','application/json']],
+						data:jsonstr(reorderData),
+						onload(){
+							resolve(this.getJSONResponse());
+						}
+					})
+				})
+				if(!results.ok){
+					app.showWarnings(results.message);
+					this.remove();
+				}else{
+					app.openPaymentDetails(results.data,true);
+					this.remove();	
+				}
 			},
 			async claimSaldo(){
 				const response = await new Promise((resolve,reject)=>{
