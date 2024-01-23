@@ -83,7 +83,7 @@ const view = {
 							    cursor: pointer;
 							    border: 1px solid gainsboro;
 							    white-space: nowrap;
-								">Cek UserID</div>
+								" id=useridchecker>Cek UserID</div>
 							</div>
 							${param.products[0].category === 'Games' ? '<div style=margin-top:10px;><span style="font-size:12px;color:red;">Jika games memiliki zona id, maka gunakan formula berikut:<br>"user id/zona id"</span></div>' : ''}
 						</div>
@@ -125,6 +125,29 @@ const view = {
 				app.body.style.overflow = 'auto';
 				this.remove();
 			},
+			async forceUserIdChecker(){
+				let userInputs = this.find('#goalNumber').value.split('/');
+				const games = param.products[0].brand.toLowerCase();
+				let userdata;
+				if(games === 'free fire'){
+					userdata = `free-fire?id=${userInputs[0]}`;
+				}else if(games === 'mobile legends'){
+					userdata = `mobile-legends?id=${userInputs[0]}&zone=${userInputs[1]}`;
+				}
+				const result = await new Promise((resolve,reject)=>{
+					cOn.get({
+						url:`${app.usernameCheckerUrl}/${userdata}`,
+						onload(){
+							resolve(this.getJSONResponse());
+						}
+					})
+				})
+				if(result.status){
+					this.data.gamesData = result;
+					return app.showWarnings(`${result.message} <br>${result.data.username} (${result.data.user_id})`);
+				}
+				app.showWarnings('ID tidak ditemukan');
+			},
 			onadded(){
 				console.log(param);
 				this.find('#backbutton').onclick = ()=>{
@@ -132,6 +155,9 @@ const view = {
 				}
 				this.find('#buybutton').onclick = ()=>{
 					this.collectData();
+				}
+				this.find('#useridchecker').onclick = ()=>{
+					this.forceUserIdChecker();
 				}
 				this.payments = this.find('#payments');
 				this.variansdiv = this.find('#productvarians');
@@ -206,6 +232,62 @@ const view = {
 					}))
 				})
 			},
+			generateSaldoGuaranteeMethod(price,activeVarian){
+				this.payments.addChild(makeElement('div',{
+					parent:this,
+					style:`
+						border:1px solid gainsboro;
+						border-radius:10px;
+						display:flex;
+						padding:20px;
+						cursor:pointer;
+						margin-top:15px;
+						gap:15px;
+						align-items:center;
+						flex-wrap:wrap;
+					`,
+					innerHTML:`
+						<div><img src="./more/media/guaranteeicon.png" style="background:white;object-fit:contain;border:1px solid gainsboro;border-radius:10px;padding:10px;"></div>
+						<div style=display:flex;gap:10px;flex-direction:column;>
+							<div style=font-size:14px;>
+								<div>Saldo Garansi</div>
+								<div id=saldolabel style="font-size:10px;">-</div>
+							</div>
+							<div style=font-size:12px;>Rp ${getPrice(Number(price))}</div>
+						</div>
+					`,
+					async onadded(){
+						this.saldovalue = await new Promise((resolve,reject)=>{
+							cOn.get({
+								url:`${app.baseUrl}/guaranteesaldo?saldoId=${localStorage.getItem('saldoId')}`,
+								onload(){
+									resolve(this.getJSONResponse());
+								}
+							})
+						});
+						if(this.saldovalue.valid)
+							this.find('#saldolabel').innerText = `Anda memiliki Rp. ${getPrice(this.saldovalue.price)} saldo garansi.`;
+						else this.find('#saldolabel').innerText = 'Anda tidak memiliki saldo garansi.';
+					},
+					onclick(){
+						if(!this.saldovalue)
+							return app.showWarnings('Mohon tunggu sebentar sedang memproses data anda!');
+						if(!this.saldovalue.valid)
+							return app.showWarnings('Anda tidak memiliki saldo garansi');
+						if(this.saldovalue.price < price)
+							return app.showWarnings('Saldo garansi tidak mencukupi!');
+						if(this.parent.data.productVarian){
+							if(activeVarian)
+								activeVarian.classList.remove('varianselected');
+							this.classList.add('varianselected');
+							activeVarian = this;
+							this.parent.data.paymentMethod = 'gs';
+							this.parent.data.methodName = 'Saldo Garansi';
+							this.parent.data.saldoId = localStorage.getItem('saldoId');
+						}else app.showWarnings('Silahkan memilih produk terlebih dahulu!');
+					}
+				}))
+			},
 			async generatePaymentMethod(price){
 				const availMethods = await new Promise((resolve,reject)=>{
 					cOn.get({url:`${app.baseUrl}/getpayment?price=${price}`,onload(){
@@ -217,8 +299,9 @@ const view = {
 					}})
 				})
 				this.payments.clear();
+				let activeVarian;
+				this.generateSaldoGuaranteeMethod(price,activeVarian);
 				if(availMethods){
-					let activeVarian;
 					availMethods.forEach(method=>{
 						this.payments.addChild(makeElement('div',{
 							parent:this,
@@ -252,18 +335,6 @@ const view = {
 							}
 						}))
 					})
-				}else{
-					this.payments.addChild(makeElement('div',{
-						style:`
-							font-size:12px;
-							color:gray;
-							font-weight:bold;
-						`,
-						innerHTML:`
-							Metode Tidak Tersedia...
-						`,
-					}))
-					app.showWarnings('Metode pembayaran sedang tidak tersedia saat ini!');
 				}
 			}
 		})
@@ -279,7 +350,7 @@ const view = {
 			  display: flex;
 			  align-items: flex-start;
 			  justify-content: center;
-			  z-index: 4;
+			  z-index: 14;
 			  background: rgb(225 225 225 / 47%);
 			`,
 			innerHTML:`
