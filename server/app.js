@@ -265,17 +265,46 @@ const useSaldoGuarantee = async (req,res,digiproduct)=>{
 	res.json({ok:true,data:orderData.payments});
 }
 
+const reorder = async (req,res,productStatus)=>{
+	console.log('trying to reorder!');
+
+	const oldOrderData = (await db.ref(`orders/${req.fields.payments.orderId}`).get()).val();
+	if(oldOrderData.payments.status !== 'Success')
+		return res.json({ok:false,message:'Garansi reorder tidak tersedia!'});
+	if(oldOrderData.products.status === 'Sukses')
+		return res.json({ok:false,message:'Garansi reorder tidak tersedia!'});
+	if(oldOrderData.rg)
+		return res.json({ok:false,message:'Garansi telah dipakai!'});
+	//ordering new product.
+	return res.json(oldOrderData);
+	const dateCreate = new Date().toLocaleString('en-US',{ timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+	const merchantOrderId = Date.parse(dateCreate).toString();
+	const orderData = req.fields;
+	let digiresponse = await digiOrder(orderData,{sku:orderData.products.productVarian,nocustomer:orderData.products.goalNumber,refid:merchantOrderId});
+	if(digiresponse.data && digiresponse.data.status)
+		orderData.products.status = digiresponse.data.status;
+	orderData.digiresponse = digiresponse.data;
+	await db.ref(`orders/${merchantOrderId}`).set(orderData);
+	oldOrderData.rg = true;
+	await db.ref(`orders/${req.fields.payments.orderId}`).set(oldOrderData);
+	res.json({ok:true,data:orderData});
+}
+
 app.post('/dopayment',async (req,res)=>{
 
 	//make sure to check newest status of the product.
 	const productStatus = await productRechecker(req.fields.productVarian);
+	if(!productStatus)
+		return res.json({ok:false,message:'Terjadi kesalahan, harap coba sesaat lagi!'});
 	if(!productStatus.buyer_product_status || !productStatus.seller_product_status)
 		return res.json({ok:false,message:'Maaf, tidak dapat melakukan order. Product sedang bermasalah, silahkan coba beberapa saat lagi'});
 
 	//some route, to handling saldo guarantee method selected.
-	if(req.fields.paymentMethod === 'gs'){
+	if(req.fields.paymentMethod === 'gs')
 		return useSaldoGuarantee(req,res,productStatus);
-	}
+
+	if(req.fields.reorder)
+		return reorder(req,res,productStatus);
 
 
 	//payment sections.
@@ -488,7 +517,7 @@ app.post('/diginotify',async (req,res)=>{
     // Process the webhook payload here
     const orderData = (await db.ref(`orders/${post_data.data.ref_id}`).get()).val();
     if(orderData){
-    	orderData.produts.status = post_data.data.status;
+    	orderData.products.status = post_data.data.status;
     	orderData.digiresponse = post_data.data;
     	await db.ref(`order/${post_data.data.ref_id}`).set(orderData);
     	//sending fonnte notification
@@ -499,6 +528,7 @@ app.post('/diginotify',async (req,res)=>{
     res.status(401).send('Invalid signature');
   }
 })
+
 
 app.post('/newfeedback',async (req,res)=>{
 	const feedValue = req.fields.value;
