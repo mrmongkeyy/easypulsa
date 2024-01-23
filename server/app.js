@@ -243,12 +243,40 @@ app.post('/addmorevisitor',async (req,res)=>{
 	res.json({valid:true});
 })
 
+const useSaldoGuarantee = async (req,res,digiproduct)=>{
+	const dateCreate = new Date().toLocaleString('en-US',{ timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+	const merchantOrderId = Date.parse(dateCreate).toString();
+	console.log('Method used is saldo guarantee');
+	if(!req.fields.saldoId)
+		return res.json({ok:false,message:'SaldoId dibutuhkan!'});
+	let userSaldo = (await db.ref(`saldo/${req.fields.saldoId}`).get()).val();
+	if(userSaldo < req.fields.price)
+		return res.json({ok:false,message:'Saldo anda tidak mencukupi!'});
+	userSaldo -= req.fields.price;
+	await db.ref(`saldo/${req.fields.saldoId}`).set(userSaldo);
+	//time to make order.
+	const orderData = {payments:{orderId:merchantOrderId,dateCreate,status:'Success',profit:req.fields.price - digiproduct.price},products:req.fields};
+	let digiresponse = await digiOrder(orderData,{sku:orderData.products.productVarian,nocustomer:orderData.products.goalNumber,refid:merchantOrderId});
+	console.log('digi response, ',digiresponse);
+	if(digiresponse.data && digiresponse.data.status)
+		orderData.products.status = digiresponse.data.status;
+	orderData.digiresponse = digiresponse.data;
+	await db.ref(`orders/${orderId}`).set(orderData);
+	res.json({ok:true,data:orderData.payments});
+}
+
 app.post('/dopayment',async (req,res)=>{
 
 	//make sure to check newest status of the product.
-	
-	if(! await productRechecker(req.fields.productVarian))
+	const productStatus = await productRechecker(req.fields.productVarian);
+	if(!productStatus.buyer_product_status || !productStatus.seller_product_status)
 		return res.json({ok:false,message:'Maaf, tidak dapat melakukan order. Product sedang bermasalah, silahkan coba beberapa saat lagi'});
+
+	//some route, to handling saldo guarantee method selected.
+	if(req.fields.paymentMethod === 'gs'){
+		return useSaldoGuarantee(req,res,productStatus);
+	}
+
 
 	//payment sections.
 	const duitkuData = (await db.ref('duitkuData').get()).val();
@@ -327,7 +355,7 @@ app.post('/dopayment',async (req,res)=>{
 	    const result = response.data;
 	    if(result.statusCode === '00'){
 	    	const orderId = merchantOrderId;
-	    	const response = {ok:true,data:{orderId,dateCreate,status:'Pending',paymentUrl:result.paymentUrl,vaNumber:result.vaNumber||null,qrString:result.qrString||null}};
+	    	const response = {ok:true,data:{orderId,dateCreate,status:'Pending',profit:req.fields.price - productStatus.price,paymentUrl:result.paymentUrl,vaNumber:result.vaNumber||null,qrString:result.qrString||null}};
 	    	const savingStatus = await db.ref(`orders/${orderId}`).set({products:req.fields,payments:response.data});
 	    	res.json(response);
 	    }else{
@@ -429,21 +457,11 @@ app.post('/duitkunotify',async (req,res)=>{
     		if(resultCode === '00'){
     			//when the status is success.
     			orderData.payments.status = 'Success';
-					//check saldo left
-					let digiresponse;
-					const digiSaldo = await getDigiSaldo();
-					if(digiSaldo.data.deposit >= digiData.minSaldoToMakeOrder){
-						//process digi order
-	    			digiresponse = await digiOrder({sku:orderData.products.productVarian,nocustomer:orderData.products.goalNumber,refid:merchantOrderId});
-					}else{
-						//send notifications to owner, that no saldo left on digi acount | digi saldo is currently small.
-						await fonnte.sendMessage(Object.assign(orderData,digiSaldo),'needMoreSaldo');
-						digiresponse = {data:{status:'Gagal',message:'Saldo digi tidak mencukupi, order dibatalkan'}}
-					}
+					let digiresponse = await digiOrder(orderData,{sku:orderData.products.productVarian,nocustomer:orderData.products.goalNumber,refid:merchantOrderId});
 					if(digiresponse.data && digiresponse.data.status)
     				orderData.products.status = digiresponse.data.status;
     			orderData.digiresponse = digiresponse.data;
-    			console.log('digi response',digiresponse);	
+    			console.log('digi response',digiresponse);
     		}else{
     			orderData.payments.status = 'Canceled';
     			orderData.products.status = 'Gagal';
@@ -537,23 +555,29 @@ const productRechecker = (buyyerProductCode) => {
 			sign:md5(digiData.username+digiData.devKey+'pricelist'),
 			code:buyyerProductCode
 		})
-		if(!response.data.data[0].buyyer_product_status || !response.data.data[0].seller_product_status)
-			resolve(false);
-		resolve(true);
+		resolve(response.data.data[0]);
 	})
 }
-const digiOrder = (param) => {
+const digiOrder = (orderData,param) => {
 	return new Promise(async (resolve,reject)=>{
 		const digiData = (await db.ref('digiData').get()).val();
-		const url = 'https://api.digiflazz.com/v1/transaction';
-		const response = await axios.post(url,{
-			username:digiData.username,
-			buyer_sku_code:param.sku,
-			customer_no:param.nocustomer,
-			ref_id:param.refid,
-			sign:md5(digiData.username+digiData.devKey+req.query.refid)
-		})
-		resolve(response);
+		const digiSaldo = await getDigiSaldo();
+		if(digiSaldo.data.deposit >= digiData.minSaldoToMakeOrder || 50000){
+			//process digi order
+			const url = 'https://api.digiflazz.com/v1/transaction';
+			const response = await axios.post(url,{
+				username:digiData.username,
+				buyer_sku_code:param.sku,
+				customer_no:param.nocustomer,
+				ref_id:param.refid,
+				sign:md5(digiData.username+digiData.devKey+param.refid)
+			})
+			resolve(response);
+		}else{
+			//send notifications to owner, that no saldo left on digi acount | digi saldo is currently small.
+			await fonnte.sendMessage(Object.assign(orderData,digiSaldo),'needMoreSaldo');
+			resolve({data:{status:'Gagal',message:'Saldo digi tidak mencukupi, order dibatalkan'}});
+		}
 	})
 }
 const getDigiSaldo = () => {
