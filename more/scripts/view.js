@@ -43,12 +43,12 @@ const view = {
 				    padding: 5px;
 				    background: white;
 				    border: 1px solid gainsboro;
-				    border-radius:10px;
+				    border-radius:5px;
 					">
 						<div style="
 							width:100%;height:200px;
 						">
-							<img src="${param.details.bannerUrl}" style="width:100%;height:100%;border-radius:10px;">
+							<img src="${param.details.bannerUrl}" style="width:100%;height:100%;border-radius:5px;">
 						</div>
 					</div>
 					<div style="
@@ -56,7 +56,7 @@ const view = {
 						border:1px solid gainsboro;
 						background:white;
 						margin-bottom:10px;
-						border-radius:10px;
+						border-radius:5px;
 					">
 						<div style="padding-bottom:10px;margin-bottom:10px;font-weight:bold;">${param.title}</div>
 						<div>Menyediakan ${param.title} beragam varian dengan harga yang sangat terjangkau.</div>
@@ -66,7 +66,7 @@ const view = {
 						border:1px solid gainsboro;
 						background:white;
 						margin-bottom:10px;
-						border-radius:10px;
+						border-radius:5px;
 					">
 						<div style="padding-bottom:10px;margin-bottom:20px;font-weight:bold;">Detail Kustomer</div>
 						<div style=margin-bottom:20px;>
@@ -74,7 +74,7 @@ const view = {
 							<div style=display:flex;gap:10px;><input placeholder="${param.products[0].category !== 'Games' ? '08xxxxxxxxx' : 'user id/zone id'}" id=goalNumber>
 								<div style="
 									padding: 10px;
-							    border-radius: 10px;
+							    border-radius: 5px;
 							    color: white;
 							    background: #8973df;
 							    display: ${param.products[0].category !== 'Games' ? 'none' : 'flex'};
@@ -97,7 +97,7 @@ const view = {
 						border:1px solid gainsboro;
 						background:white;
 						margin-bottom:10px;
-						border-radius:10px;
+						border-radius:5px;
 					">
 						<div style="padding-bottom:10px;margin-bottom:10px;font-weight:bold;">Varian Produk</div>
 						<div id=productvarians>
@@ -109,15 +109,41 @@ const view = {
 						border:1px solid gainsboro;
 						background:white;
 						margin-bottom:10px;
-						border-radius:10px;
+						border-radius:5px;
 					">
 						<div style="padding-bottom:10px;margin-bottom:10px;font-weight:bold;">Metode Pembayaran</div>
 						<div id=payments>
 							<div style=margin-top:10px;font-size:12px;color:gray;font-weight:bold;>Memuat metode pembayaran...</div>
 						</div>
 					</div>
+					<div style="
+						padding:20px;
+						border:1px solid gainsboro;
+						background:white;
+						margin-bottom:10px;
+						border-radius:5px;
+					">
+						<div style="padding-bottom:10px;margin-bottom:10px;font-weight:bold;">Gunakan Voucher</div>
+						<div style=display:flex;gap:10px;>
+							<div style=display:flex;width:100%;>
+								<input placeholder="Masukan kode voucher anda" id=voucher>
+							</div>
+							<div style="
+								padding:10px;
+								color:white;
+								background:#8973df;
+								border-radius:5px;
+								white-space:nowrap;display:flex;
+								align-items:center;
+								border:1px solid gainsboro;
+								cursor:pointer;
+							" id=checkvoucherstatus>
+								Cek Voucher	
+							</div>
+						</div>
+					</div>
 					<div style="margin:20px 0;" class=smallimportan>*Dengan melanjutkan berarti anda setuju dengan semua persyaratan kami.</div>
-					<div class=goldbutton style=margin-bottom:10px; id=buybutton>Proses Pembelian</div>
+					<div class=goldbutton style=margin-bottom:10px;border-radius:5px; id=buybutton>Proses Pembelian</div>
 				</div>
 			`,
 			close(){
@@ -148,6 +174,18 @@ const view = {
 				}
 				app.showWarnings('ID tidak ditemukan');
 			},
+			async checkVoucher(){
+				const voucherValue = this.find('#voucher').value;
+				const response = await new Promise((resolve,reject)=>{
+					cOn.get({
+						url:`${app.baseUrl}/voucherstatus?code=${voucherValue}&&category=${param.products[0].category.toLowerCase()}&&brand=${param.products[0].brand.toLowerCase()}&&sku=${this.data.productVarian}`,
+						onload(){
+							resolve(this.getJSONResponse());
+						}
+					})
+				})
+				app.showWarnings(response.message);
+			},
 			onadded(){
 				console.log(param);
 				this.find('#backbutton').onclick = ()=>{
@@ -158,6 +196,9 @@ const view = {
 				}
 				this.find('#useridchecker').onclick = ()=>{
 					this.forceUserIdChecker();
+				}
+				this.find('#checkvoucherstatus').onclick = ()=>{
+					this.checkVoucher();
 				}
 				this.payments = this.find('#payments');
 				this.variansdiv = this.find('#productvarians');
@@ -205,7 +246,7 @@ const view = {
 						style:`
 							height:64px;
 							border:1px solid gainsboro;
-							border-radius:10px;
+							border-radius:5px;
 							display:flex;
 							justify-content:space-between;
 							align-items:center;
@@ -237,7 +278,7 @@ const view = {
 					parent:this,
 					style:`
 						border:1px solid gainsboro;
-						border-radius:10px;
+						border-radius:5px;
 						display:flex;
 						padding:20px;
 						cursor:pointer;
@@ -247,7 +288,7 @@ const view = {
 						flex-wrap:wrap;
 					`,
 					innerHTML:`
-						<div><img src="./more/media/guaranteeicon.png" style="background:white;object-fit:contain;border:1px solid gainsboro;border-radius:10px;padding:10px;"></div>
+						<div><img src="./more/media/guaranteeicon.png" style="background:white;object-fit:contain;border:1px solid gainsboro;border-radius:5px;padding:10px;"></div>
 						<div style=display:flex;gap:10px;flex-direction:column;>
 							<div style=font-size:14px;>
 								<div>Saldo Garansi</div>
@@ -307,7 +348,7 @@ const view = {
 							parent:this,
 							style:`
 								border:1px solid gainsboro;
-								border-radius:10px;
+								border-radius:5px;
 								display:flex;
 								padding:20px;
 								cursor:pointer;
@@ -317,7 +358,7 @@ const view = {
 								flex-wrap:wrap;
 							`,
 							innerHTML:`
-								<div><img src="${method.paymentImage}" style="background:white;width:64px;height:64px;object-fit:contain;border:1px solid gainsboro;border-radius:10px;padding:10px;"></div>
+								<div><img src="${method.paymentImage}" style="background:white;width:64px;height:64px;object-fit:contain;border:1px solid gainsboro;border-radius:5px;padding:10px;"></div>
 								<div style=display:flex;gap:10px;flex-direction:column;>
 									<div style=font-size:14px;>${method.paymentName}</div>
 									<div style=font-size:12px;>Rp ${getPrice(Number(method.totalFee) + price)}</div>
@@ -369,7 +410,7 @@ const view = {
 				<div style="
 					background:white;
 					border:1px solid gainsboro;
-					border-radius:10px;
+					border-radius:5px;
 					margin-top:20px;
 					display:flex;
 					flex-direction:column;
@@ -518,7 +559,7 @@ const view = {
 				    display: flex;
 				    align-items: center;
 				    justify-content: center;
-				    border-radius:10px;
+				    border-radius:5px;
 					" id=refreshbutton>
 						<img src=./more/media/refreshicon.png style=width:24px;height:24px;>
 					</div>
@@ -534,7 +575,7 @@ const view = {
 						border:1px solid gainsboro;
 						background:white;
 						margin-bottom:10px;
-						border-radius:10px;
+						border-radius:5px;
 					">
 						<div style="padding-bottom:10px;margin-bottom:10px;font-weight:bold;">Pesanan berhasil dibuat!</div>
 						<div>Terimakasih telah melakukan pemesanan, mohon hubungi admin jika ada kebingungan</div>
@@ -544,7 +585,7 @@ const view = {
 						border:1px solid gainsboro;
 						background:white;
 						margin-bottom:10px;
-						border-radius:10px;
+						border-radius:5px;
 					">
 						<div style="padding-bottom:10px;margin-bottom:20px;font-weight:bold;">Detail Pesanan</div>
 						<div style=margin-bottom:20px;>
@@ -576,7 +617,7 @@ const view = {
 							<div style="
 								padding: 20px;
 						    color:  ${param.payments.status === 'Pending' ? 'black' : param.products.status === 'Processing' ? 'black' : param.products.status === 'Success' ? 'white' : 'black'};
-						    border-radius: 10px;
+						    border-radius:5px;
 						    border:1px solid gainsboro;
 						    background: ${param.payments.status === 'Pending' ? 'whitesmoke' : param.products.status === 'Processing' ? 'whitesmoke' : param.products.status === 'Success' ? '#8973df' : 'whitesmoke'};
 						    text-align: center;
@@ -589,7 +630,7 @@ const view = {
 						border:1px solid gainsboro;
 						background:white;
 						margin-bottom:10px;
-						border-radius:10px;
+						border-radius:5px;
 					">
 						<div style="padding-bottom:10px;margin-bottom:20px;font-weight:bold;">Detail Pembayaran</div>
 						<div style=margin-bottom:20px;>
@@ -611,7 +652,7 @@ const view = {
 							    width: 32px;
 							    height: 32px;
 							    padding: 5px;
-							    border-radius: 10px;
+							    border-radius:5px;
 							    border:1px solid gainsboro;
 							    cursor:pointer;
 								">
@@ -621,7 +662,7 @@ const view = {
 							<div style="text-align:center;display:${param.payments.qrString ? 'block' : 'none'};
 								    padding: 20px;
 								    border: 1px solid gainsboro;
-								    border-radius:10px;
+								    border-radius:5px;
 								    position:relative;
 								    overflow:hidden;
 							">
@@ -642,7 +683,7 @@ const view = {
 							<div ${!param.payments.qrString && !param.payments.vaNumber ? '' : 'hidden'} style="
 							    background: #118eea;
 							    color: white;
-							    border-radius: 10px;
+							    border-radius:5px;
 							    padding: 20px;
 							    text-align: center;
 							    cursor:pointer;
@@ -666,7 +707,7 @@ const view = {
 						border:1px solid gainsboro;
 						background:white;
 						margin-bottom:10px;
-						border-radius:10px;
+						border-radius:5px;
 					">
 						<div style="
 							background: #8973df;
@@ -676,7 +717,7 @@ const view = {
 					    gap: 15px;
 					    align-items: center;
 					    justify-content: center;
-					    border-radius: 10px;
+					    border-radius:5px;
 					    cursor: pointer;
 						" id=givefeedback>
 							<img src=./more/media/feedbackicon.png>
@@ -805,7 +846,7 @@ const view = {
 							padding:20px;
 							border:1px solid gainsboro;
 							background:white;
-							border-radius:10px;
+							border-radius:5px;
 							margin-bottom:10px;
 							display: flex;
 					    justify-content: space-between;
@@ -838,7 +879,7 @@ const view = {
 							padding:20px;
 							border:1px solid gainsboro;
 							background:white;
-							border-radius:10px;
+							border-radius:5px;
 							margin-bottom:10px;
 						">
 							<div style=margin-bottom:10px;font-weight:bold;>Cek Pesanan</div>
@@ -850,12 +891,13 @@ const view = {
 									padding:10px;
 									background:#8973df;
 									color:white;
-									border-radius:10px;
+									border-radius:5px;
 									display:flex;
 									align-items:center;
 									text-align:center;
 									white-space:nowrap;
 									cursor:pointer;
+									border:1px solid gainsboro;
 								" id=forceCheckingButton>Cek Pesanan</div>
 							</div>
 						</div>
@@ -1068,7 +1110,7 @@ const view = {
 				<div style="
 					background:white;
 					border:1px solid gainsboro;
-					border-radius:10px;
+					border-radius:5px;
 					margin-top:20px;
 					display:flex;
 					flex-direction:column;
@@ -1103,7 +1145,7 @@ const view = {
 								<div id=clearButton style="
 									padding:20px;
 									border:1px solid gainsboro;
-									border-radius:10px;
+									border-radius:5px;
 									background:#8973df;
 									color:white;
 									width:100%;
@@ -1248,7 +1290,7 @@ const view = {
 											padding:20px;
 											border:1px solid gainsboro;
 											background:white;
-											border-radius:10px 10px 0 0;
+											border-radius:5px 5px 0 0;
 										">
 											<div style="
 					              width:100%;
@@ -1260,14 +1302,14 @@ const view = {
 					                width:64px;
 					                height:64px;
 					                object-fit: cover;
-					                border-radius: 10px;
+					                border-radius:5px;
 					                margin-top:15px;
 					              ">
 					            </div>
 										</div>
 										<div class=goldbutton style="
 											border:none;
-											border-radius:0 0 10px 10px;
+											border-radius:0 0 5px 5px;
 											margin-bottom:10px;cursor:unset;
 											background:whitesmoke;
 											color:black;
@@ -1402,7 +1444,7 @@ const view = {
 											padding:20px;
 											border:1px solid gainsboro;
 											background:white;
-											border-radius:10px 10px 0 0;
+											border-radius:5px 5px 0 0;
 										">
 											<div style="
 					              width:100%;
@@ -1414,14 +1456,14 @@ const view = {
 					                width:64px;
 					                height:64px;
 					                object-fit: cover;
-					                border-radius: 10px;
+					                border-radius:5px;
 					                margin-top:15px;
 					              ">
 					            </div>
 										</div>
 										<div class=goldbutton style="
 											border:none;
-											border-radius:0 0 10px 10px;
+											border-radius:0 0 5px 5px;
 											margin-bottom:10px;cursor:unset;
 											background:whitesmoke;
 											color:black;
@@ -1557,7 +1599,7 @@ const view = {
 											padding:20px;
 											border:1px solid gainsboro;
 											background:white;
-											border-radius:10px 10px 0 0;
+											border-radius:5px 5px 0 0;
 										">
 											<div style="
 					              width:100%;
@@ -1569,14 +1611,14 @@ const view = {
 					                width:64px;
 					                height:64px;
 					                object-fit: cover;
-					                border-radius: 10px;
+					                border-radius:5px;
 					                margin-top:15px;
 					              ">
 					            </div>
 										</div>
 										<div class=goldbutton style="
 											border:none;
-											border-radius:0 0 10px 10px;
+											border-radius:0 0 5px 5px;
 											margin-bottom:10px;cursor:unset;
 											background:whitesmoke;
 											color:black;
@@ -1711,7 +1753,7 @@ const view = {
 											padding:20px;
 											border:1px solid gainsboro;
 											background:white;
-											border-radius:10px 10px 0 0;
+											border-radius:5px 5px 0 0;
 										">
 											<div style="
 					              width:100%;
@@ -1723,14 +1765,14 @@ const view = {
 					                width:64px;
 					                height:64px;
 					                object-fit: cover;
-					                border-radius: 10px;
+					                border-radius:5px;
 					                margin-top:15px;
 					              ">
 					            </div>
 										</div>
 										<div class=goldbutton style="
 											border:none;
-											border-radius:0 0 10px 10px;
+											border-radius:0 0 5px 5px;
 											margin-bottom:10px;cursor:unset;
 											background:whitesmoke;
 											color:black;
@@ -1865,7 +1907,7 @@ const view = {
 											padding:20px;
 											border:1px solid gainsboro;
 											background:white;
-											border-radius:10px 10px 0 0;
+											border-radius:5px 5px 0 0;
 										">
 											<div style="
 					              width:100%;
@@ -1877,14 +1919,14 @@ const view = {
 					                width:64px;
 					                height:64px;
 					                object-fit: cover;
-					                border-radius: 10px;
+					                border-radius:5px;
 					                margin-top:15px;
 					              ">
 					            </div>
 										</div>
 										<div class=goldbutton style="
 											border:none;
-											border-radius:0 0 10px 10px;
+											border-radius:0 0 5px 5px;
 											margin-bottom:10px;cursor:unset;
 											background:whitesmoke;
 											color:black;
@@ -1939,7 +1981,7 @@ const view = {
 				                width:64px;
 				                height:64px;
 				                object-fit: cover;
-				                border-radius: 10px;
+				                border-radius:5px;
 				                margin-top:15px;
 				              ">
 				            </div>
@@ -1998,7 +2040,7 @@ const view = {
 				<div style="
 					background:white;
 					border:1px solid gainsboro;
-					border-radius:10px;
+					border-radius:5px;
 					margin-top:20px;
 					display:flex;
 					flex-direction:column;
@@ -2141,7 +2183,7 @@ const view = {
 		    right: 10px;
 		    color: white;
 		    align-items: center;
-		    border-radius: 10px;
+		    border-radius:5px;
 		    border:1px solid gainsboro;
 		    cursor:pointer;
 		    z-index:15;
@@ -2211,7 +2253,7 @@ const view = {
 							padding:20px;
 							background:#8973df;
 							color:white;
-							border-radius:10px;
+							border-radius:5px;
 							text-align:center;
 							cursor:pointer;
 						" id=sendbutton>Kirim Keluhan</div>
@@ -2293,7 +2335,7 @@ const view = {
 							padding:20px;
 							background:#8973df;
 							color:white;
-							border-radius:10px;
+							border-radius:5px;
 							text-align:center;
 							cursor:pointer;
 							margin-bottom:10px;
@@ -2302,7 +2344,7 @@ const view = {
 							padding:20px;
 							background:#8973df;
 							color:white;
-							border-radius:10px;
+							border-radius:5px;
 							text-align:center;
 							cursor:pointer;
 						" id=claimsaldo>Klaim Saldo</div>
@@ -2400,7 +2442,7 @@ const view = {
 							<div>Masukan SaldoId Anda!</div>
 						</div>
 						<div style="
-							border-radius:10px;
+							border-radius:5px;
 							text-align:center;
 							cursor:pointer;
 							margin-bottom:10px;
@@ -2413,7 +2455,7 @@ const view = {
 							padding:15px;
 							background:#8973df;
 							color:white;
-							border-radius:10px;
+							border-radius:5px;
 							text-align:center;
 							cursor:pointer;
 						" id=claimsaldo>Simpan</div>
