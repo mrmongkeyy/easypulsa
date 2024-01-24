@@ -6,7 +6,7 @@ const app = {
 	bodydiv:find('#body'),
 	menuButtons:findall('#menu div'),
 	topLayer:find('#toplayer'),
-	async init(){
+	init(){
 		this.menuButtonsInit();
 		this.generateHomeContent();
 	},
@@ -83,6 +83,9 @@ const app = {
 	},
 	openBanner(){
 		this.topLayer.replaceChild(view.bannerEdit());
+	},
+	openVoucher(){
+		this.topLayer.replaceChild(view.voucherEdit());
 	},
 	openBroadcast(){
 		this.topLayer.replaceChild(view.sendBroadcast());
