@@ -243,6 +243,25 @@ app.post('/addmorevisitor',async (req,res)=>{
 	res.json({valid:true});
 })
 
+app.post('/newvoucher',async (req,res)=>{
+	await db.ref(`vouchers/${req.fields.data.code}`).set(req.fields.data);
+	res.json({valid:true});
+})
+
+app.get('/voucherstatus',async (req,res)=>{
+	const voucherData = (await db.ref(`vouchers/${req.query.code}`).get()).val();
+	if(!voucherData)
+		return res.json({valid:false,message:'Voucher tidak ditemukan!'});
+	//validation, voucher having some property. category, type, value;
+	if(voucherData.category !== '*' && voucherData.category !== req.query.category)
+		return res.json({valid:false,message:'Voucher tidak dapat digunakan pada produk kategori ini!'});
+	if(voucherData.brand !== '*' && voucherData.brand !== req.query.brand)
+		return res.json({valid:false,message:'Voucher tidak dapat digunakan pada produk brand ini!'});
+	if(voucherData.sku !== '*' && voucherData.sku !== req.query.sku)
+		return res.json({valid:false,message:'Voucher tidak dapat digunakan pada produk varian ini!'});
+	res.json({valid:true,message:'Voucher dapat digunakan!'});
+})
+
 const useSaldoGuarantee = async (req,res,digiproduct)=>{
 	const dateCreate = new Date().toLocaleString('en-US',{ timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
 	const merchantOrderId = Date.parse(dateCreate).toString();
