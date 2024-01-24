@@ -7,7 +7,7 @@ const app = {
 	homelabel:find('#beranda'),
 	footer:find('#footer'),
 	body:find('body'),
-	development:true,
+	development:false,
 	app:find('#app'),
 	menu:find('#menu'),
 	bodydiv:find('#body'),
