@@ -7,6 +7,7 @@ const app = {
 	homelabel:find('#beranda'),
 	footer:find('#footer'),
 	body:find('body'),
+	development:true,
 	app:find('#app'),
 	menu:find('#menu'),
 	bodydiv:find('#body'),
@@ -14,6 +15,7 @@ const app = {
 	topLayer:find('#toplayer'),
 	carouselParent:find('.owl-carousel'),
 	async init(){
+		this.provideScurities();
 		await this.handleFrontData();
 		this.menuButtonsInit();
 		let {products,paymentMethods,carousel,valid} = await this.getPriceList();
@@ -212,6 +214,21 @@ const app = {
 				resolve(true);
 			}
 		})
+	},
+	provideScurities(){
+		document.onkeydown = (e)=>{
+			if(!this.development && e.key === 'F12'){
+				this.showWarnings('Galat!!!<br>Akses terbatas!');
+				e.preventDefault();	
+			}
+		}
+		//some defense code.
+		if(!this.development){
+			document.oncontextmenu = (e)=>{
+				this.showWarnings('Galat!!!<br>Akses terbatas!');
+				e.preventDefault();
+			}
+		}
 	},
 	generateRandomProduct(){
 		const productsRandom = [];
