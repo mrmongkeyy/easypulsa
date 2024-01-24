@@ -143,7 +143,7 @@ const view = {
 										</div>
 										<div  style=display:flex;gap:10px;justify-content:space-between;>
 											<div>Status</div>
-											<div>${orders[i].payments.status === 'Pending' ? 'Menunggu Pembayaran' : orders[i].products.status}</div>
+											<div>${orders[i].payments.status === 'Pending' ? 'Menunggu Pembayaran' : orders[i].products.status || 'Gagal'}</div>
 										</div>
 										<div  style=display:flex;gap:10px;justify-content:space-between;>
 											<div>OrderId</div>
@@ -311,7 +311,7 @@ const view = {
 							style:`
 								padding:20px;
 								background:white;
-								border-radius:10px;
+								border-radius:5px;
 								margin-bottom:5px;
 								border:1px solid gainsboro;
 								display:flex;
@@ -348,7 +348,7 @@ const view = {
 							style:`
 								padding:20px;
 								background:white;
-								border-radius:10px;
+								border-radius:5px;
 								margin-bottom:5px;
 								border:1px solid gainsboro;
 								display:flex;
@@ -370,7 +370,7 @@ const view = {
 							    color: white;
 							    cursor: pointer;
 							    background: #8973df;
-							    border-radius: 10px;
+							    border-radius:5px;
 								" id=sendreply>Kirim Balasan</div>
 							`,
 							onadded(){
@@ -661,7 +661,7 @@ const view = {
 					    align-items: center;
 					    justify-content: center;
 					    color: white;
-					    border-radius: 10px;
+					    border-radius:5px;
 					    background: #8973df;
 					    cursor: pointer;
 						" id=savechanges>Simpan Perubahan</div>
@@ -877,7 +877,7 @@ const view = {
     		margin-top: 20px;
 		    border: 1px solid gainsboro;
 		    background: white;
-		    border-radius: 10px;
+		    border-radius:5px;
 		    padding: 20px;
 			`,
 			innerHTML:`
@@ -926,7 +926,7 @@ const view = {
     		margin-top: 10px;
 		    border: 1px solid gainsboro;
 		    background: white;
-		    border-radius: 10px;
+		    border-radius:5px;
 		    padding: 20px;
 			`,
 			innerHTML:`
@@ -972,7 +972,7 @@ const view = {
     		margin-top: 20px;
 		    border: 1px solid gainsboro;
 		    background: white;
-		    border-radius: 10px;
+		    border-radius:5px;
 		    padding: 20px;
 			`,
 			innerHTML:`
@@ -1064,7 +1064,7 @@ const view = {
 				    display: flex;
 				    align-items: center;
 				    justify-content: center;
-				    border-radius:10px;
+				    border-radius:5px;
 					" id=refreshbutton>
 						<img src=./more/media/refreshicon.png style=width:24px;height:24px;>
 					</div>
@@ -1080,7 +1080,7 @@ const view = {
 						border:1px solid gainsboro;
 						background:white;
 						margin-bottom:10px;
-						border-radius:10px;
+						border-radius:5px;
 					">
 						<div style="padding-bottom:10px;margin-bottom:20px;font-weight:bold;">Detail Pesanan</div>
 						<div style=margin-bottom:20px;>
@@ -1113,7 +1113,7 @@ const view = {
 						border:1px solid gainsboro;
 						background:white;
 						margin-bottom:10px;
-						border-radius:10px;
+						border-radius:5px;
 					">
 						<div style="padding-bottom:10px;margin-bottom:20px;font-weight:bold;">Detail Pembayaran</div>
 						<div style=margin-bottom:20px;>
@@ -1135,7 +1135,7 @@ const view = {
 							    width: 32px;
 							    height: 32px;
 							    padding: 5px;
-							    border-radius: 10px;
+							    border-radius:5px;
 							    border:1px solid gainsboro;
 							    cursor:pointer;
 								">
@@ -1145,7 +1145,7 @@ const view = {
 							<div style="text-align:center;display:${param.payments.qrString ? 'block' : 'none'};
 								    padding: 20px;
 								    border: 1px solid gainsboro;
-								    border-radius:10px;
+								    border-radius:5px;
 								    position:relative;
 								    overflow:hidden;
 							">
@@ -1166,7 +1166,7 @@ const view = {
 							<div ${!param.payments.qrString && !param.payments.vaNumber ? '' : 'hidden'} style="
 							    background: #118eea;
 							    color: white;
-							    border-radius: 10px;
+							    border-radius:5px;
 							    padding: 20px;
 							    text-align: center;
 							    cursor:pointer;
@@ -1307,7 +1307,7 @@ const view = {
 						style:`
 							padding:20px;
 							background:white;
-							border-radius:10px;
+							border-radius:5px;
 							margin-bottom:5px;
 							border:1px solid gainsboro;
 							display:flex;
@@ -1357,7 +1357,7 @@ const view = {
 								padding:15px;
 								color:white;
 								background:#8973df;
-								border-radius:10px;
+								border-radius:5px;
 								cursor:pointer;
 								text-align:center;
 								margin-top:10px;
@@ -1461,7 +1461,7 @@ const view = {
 					<div style="
 						padding:20px;
 						background:white;
-						border-radius:10px;
+						border-radius:5px;
 						margin-bottom:5px;
 						border:1px solid gainsboro;
 						display:flex;
@@ -1479,7 +1479,7 @@ const view = {
 							padding:15px;
 							color:white;
 							background:#8973df;
-							border-radius:10px;
+							border-radius:5px;
 							cursor:pointer;
 							text-align:center;
 							margin-top:10px;
@@ -1508,6 +1508,156 @@ const view = {
 
 				if(response.valid)
 					return	app.showWarnings('Pesan Broadcast Berhasil Dikirim!');
+				app.showWarnings('Terjadi kesalahan!');
+			},
+			onadded(){
+				this.find('#backbutton').onclick = ()=>{
+					this.close();
+				}
+				this.find('#savebutton').onclick = ()=>{
+					this.send();
+				}
+				this.pplace = this.find('#pplace');
+				this.anim({
+					targets:this,
+					height:['0','95%'],
+					duration:1000
+				})
+			}
+		})
+	},
+	voucherEdit(){
+		return makeElement('div',{
+			className:'smartWidth',
+			style:`
+				background:white;
+				border:1px solid gainsboro;
+				display:flex;
+				flex-direction:column;
+				overflow:hidden;
+				border-radius:10px 10px 0 0;
+			`,
+			innerHTML:`
+				<div style="
+					padding:10px;
+					height:48px;
+					border-bottom:1px solid gainsboro;
+					display:flex;
+					align-items:center;
+					justify-content:center;
+					position:relative;
+				">
+					<div style="
+						position: absolute;
+				    left: 10px;
+				    padding: 10px;
+				    width: 32px;
+				    height: 32px;
+				    cursor:pointer;
+					" id=backbutton>
+						<img src=./more/media/back.png>
+					</div>
+					<div>Voucher's</div>
+				</div>
+				<div style="
+					height:100%;
+					overflow:auto;
+					padding:10px;
+					background:whitesmoke;
+				" id=pplace>
+					<div style="
+						padding:20px;
+						background:white;
+						border-radius:5px;
+						margin-bottom:5px;
+						border:1px solid gainsboro;
+						display:flex;
+						flex-direction:column;
+						gap:10px;
+					">
+						<div style=font-weight:bold;margin-bottom:20px;>Tambah Voucher</div>
+						<div style=font-size:12px;>
+							<div style=margin-bottom:10px;>Kode Voucher (Salin)</div>
+							<div style=margin-bottom:10px;display:flex;>
+								<input placeholder="Masukan persen potongan harga" type=number id=code value="${new Date().getTime()}" readonly>
+							</div>
+						</div>
+						<div style=font-size:12px;>
+							<div style=margin-bottom:10px;>Potongan harga %</div>
+							<div style=margin-bottom:10px;display:flex;>
+								<input placeholder="Masukan persen potongan harga" type=number id=percent>
+							</div>
+						</div>
+						<div style=font-size:12px;>
+							<div style=margin-bottom:10px;>Kuota Pakai</div>
+							<div style=margin-bottom:10px;display:flex;>
+								<input placeholder="Masukan kuota pakai voucher" type=number id=quota>
+							</div>
+						</div>
+						<div style=font-size:12px;>
+							<div style=margin-bottom:10px;>Kategori Produk</div>
+							<div style=margin-bottom:10px;display:flex;>
+								<input placeholder="Masukan kategori produk" id=category>
+							</div>
+						</div>
+						<div style=font-size:12px;>
+							<div style=margin-bottom:10px;>Brand Produk</div>
+							<div style=margin-bottom:10px;display:flex;>
+								<input placeholder="Masukan tipe produk" id=brand>
+							</div>
+						</div>
+						<div style=font-size:12px;>
+							<div style=margin-bottom:10px;>Sku Produk</div>
+							<div style=margin-bottom:10px;display:flex;>
+								<input placeholder="Masukan sku produk" id=sku>
+							</div>
+						</div>
+						<div style="
+							padding:15px;
+							color:white;
+							background:#8973df;
+							border-radius:5px;
+							cursor:pointer;
+							text-align:center;
+							margin-top:10px;
+						" id=savebutton>Simpan Voucher</div>
+					</div>
+				</div>
+			`,
+			close(){
+				app.topLayer.hide();
+				app.body.style.overflow = 'auto';
+				this.remove();
+			},
+			data:{},
+			collect(){
+				this.findall('input').forEach((input)=>{
+					this.data[input.id] = input.value;
+					if(input.value.length === 0)
+						this.data.notValid = true;
+				})
+			},
+			async send(){
+				this.collect();
+				if(this.data.notValid){
+					app.openVoucher();
+					return app.showWarnings('Mohon isi data dengan benar!');
+				}
+				const response = await new Promise((resolve,reject)=>{
+					cOn.post({
+						url:`${app.baseUrl}/newvoucher`,
+						someSettings:[['setRequestHeader','content-type','application/json']],
+						data:jsonstr({data:this.data}),
+						onload(){
+							resolve(this.getJSONResponse());
+						}
+					})
+				})
+
+				if(response.valid){
+					app.openVoucher();
+					return	app.showWarnings('Voucher berhasil disimpan!');
+				}
 				app.showWarnings('Terjadi kesalahan!');
 			},
 			onadded(){
