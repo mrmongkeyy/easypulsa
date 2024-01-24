@@ -27,8 +27,6 @@ width: 0;
   background: #555;
 }
 
-
-
 html,
 body {
   position: absolute;
@@ -42,13 +40,11 @@ body {
   margin:0;
   justify-content: center;
   font-family: 'JSfont';
-  -webkit-tap-highlight-color: rgba(0,0,0,0);
-  -webkit-tap-highlight-color: transparent;
 }
 input, textarea, select{
   padding:15px;
   border:1px solid gainsboro;
-  border-radius: 10px;
+  border-radius: 5px;
   width: 100%;
   outline:none;
   font-family: 'JSfont';
@@ -83,7 +79,7 @@ textarea{
   height: 100%;
   position: relative;
   cursor: pointer;
-  border-radius:10px;
+  border-radius:5px;
   background: white;
   border:1px solid gainsboro;
   overflow: hidden;
@@ -113,7 +109,7 @@ textarea{
   height: 200px;
   padding:10px;
   border:1px solid gainsboro;
-  border-radius: 10px;
+  border-radius: 5px;
   cursor: pointer;
   margin-bottom: 20px;
   background: white;
@@ -125,7 +121,7 @@ textarea{
 #banner div img{
   width:100%;
   height: 100%;
-  border-radius: 10px;
+  border-radius: 5px;
   object-fit: cover;
 }
 #menu{
@@ -138,8 +134,9 @@ textarea{
   padding:20px;
   background: white;
   z-index:12;
-  border-radius: 10px;
+  border-radius: 5px;
   border:1px solid gainsboro;
+  overflow: auto;
 }
 #menu div{
   padding:10px;
@@ -149,7 +146,7 @@ textarea{
   justify-content: center;
   align-items: center;
   width: 100%;
-  border-radius:10px;
+  border-radius:5px;
   cursor: pointer;
   gap:5px;
   border:1px solid gainsboro;
