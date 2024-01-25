@@ -1675,5 +1675,430 @@ const view = {
 				})
 			}
 		})
+	},
+	newDigiDepo(){
+		return makeElement('div',{
+			className:'smartWidth',
+			style:`
+				background:white;
+				border:1px solid gainsboro;
+				display:flex;
+				flex-direction:column;
+				overflow:hidden;
+				border-radius:10px 10px 0 0;
+			`,
+			innerHTML:`
+				<div style="
+					padding:10px;
+					height:48px;
+					border-bottom:1px solid gainsboro;
+					display:flex;
+					align-items:center;
+					justify-content:center;
+					position:relative;
+				">
+					<div style="
+						position: absolute;
+				    left: 10px;
+				    padding: 10px;
+				    width: 32px;
+				    height: 32px;
+				    cursor:pointer;
+					" id=backbutton>
+						<img src=./more/media/back.png>
+					</div>
+					<div>Digiflazz Deposit Request</div>
+				</div>
+				<div style="
+					height:100%;
+					overflow:auto;
+					padding:10px;
+					background:whitesmoke;
+				" id=pplace>
+					<div style="
+						padding:20px;
+						background:white;
+						border-radius:5px;
+						margin-bottom:5px;
+						border:1px solid gainsboro;
+						display:flex;
+						flex-direction:column;
+						gap:10px;
+					">
+						<div style=font-weight:bold;margin-bottom:20px;>Deposit Baru</div>
+						<div style=font-size:12px;>
+							<div style=margin-bottom:10px;>Jumlah Deposit</div>
+							<div style=margin-bottom:10px;display:flex;>
+								<input placeholder="Masukan jumlah deposit" type=number id=amount>
+							</div>
+						</div>
+						<div style=font-size:12px;>
+							<div style=margin-bottom:10px;>Nama Pemilik Rekening</div>
+							<div style=margin-bottom:10px;display:flex;>
+								<input placeholder="Masukan nama pemilik rekening" id=rekname>
+							</div>
+						</div>
+						<div style=font-size:12px;>
+							<div style=margin-bottom:10px;>Bank Tujuan</div>
+							<div style=margin-bottom:10px;display:flex;>
+								<select id=bank>
+									<option value=BRI selected>BRI</option>
+									<option value=BNI>BNI</option>
+									<option value=BCA>BCA</option>
+									<option value=MANDIRI>MANDIRI</option>
+								</select>
+							</div>
+						</div>
+						<div style="
+							padding:15px;
+							color:white;
+							background:#8973df;
+							border-radius:5px;
+							cursor:pointer;
+							text-align:center;
+							margin-top:10px;
+						" id=savebutton>Request Deposit</div>
+					</div>
+				</div>
+			`,
+			close(){
+				app.topLayer.hide();
+				app.body.style.overflow = 'auto';
+				this.remove();
+			},
+			data:{},
+			collect(){
+				this.findall('input').forEach((input)=>{
+					this.data[input.id] = input.value;
+					if(input.value.length === 0)
+						this.data.notValid = true;
+				})
+				this.data.bank = this.find('select').value;
+			},
+			async send(){
+				this.collect();
+				if(this.data.notValid){
+					app.openDigiDepo();
+					return app.showWarnings('Mohon isi data dengan benar!');
+				}
+				const data = this.data;
+				const response = await new Promise((resolve,reject)=>{
+					cOn.post({
+						url:`${app.baseUrl}/newdigidepo`,
+						someSettings:[['setRequestHeader','content-type','application/json']],
+						data:jsonstr(data),
+						onload(){
+							resolve(this.getJSONResponse());
+						}
+					})
+				})
+				if(response.valid){
+					app.openNewDepoDetails(response);
+					return	app.showWarnings('Request depo baru berhasil!');
+				}
+				app.showWarnings(response.message);
+			},
+			onadded(){
+				this.find('#backbutton').onclick = ()=>{
+					this.close();
+				}
+				this.find('#savebutton').onclick = ()=>{
+					this.send();
+				}
+				this.pplace = this.find('#pplace');
+				this.anim({
+					targets:this,
+					height:['0','95%'],
+					duration:1000
+				})
+			}
+		})
+	},
+	depoDetails(param){
+		return makeElement('div',{
+			className:'smartWidth',
+			style:`
+				background:white;
+				border:1px solid gainsboro;
+				display:flex;
+				flex-direction:column;
+				overflow:hidden;
+				border-radius:10px 10px 0 0;
+			`,
+			innerHTML:`
+				<div style="
+					padding:10px;
+					height:48px;
+					border-bottom:1px solid gainsboro;
+					display:flex;
+					align-items:center;
+					justify-content:center;
+					position:relative;
+				">
+					<div style="
+						position: absolute;
+				    left: 10px;
+				    padding: 10px;
+				    width: 32px;
+				    height: 32px;
+				    cursor:pointer;
+					" id=backbutton>
+						<img src=./more/media/back.png>
+					</div>
+					<div>Digiflazz Deposit Details</div>
+				</div>
+				<div style="
+					height:100%;
+					overflow:auto;
+					padding:10px;
+					background:whitesmoke;
+				" id=pplace>
+					<div style="
+						padding:20px;
+						background:white;
+						border-radius:5px;
+						margin-bottom:5px;
+						border:1px solid gainsboro;
+						display:flex;
+						flex-direction:column;
+						gap:10px;
+					">
+						<div style=font-weight:bold;margin-bottom:20px;>Deposit Baru</div>
+						<div style=font-size:12px;>
+							<div style=margin-bottom:10px;>Jumlah Deposit</div>
+							<div style=margin-bottom:10px;display:flex;>
+								<input placeholder="Masukan jumlah deposit" id=amount value="Rp ${getPrice(param.amount)}" readonly>
+							</div>
+						</div>
+						<div style=font-size:12px;>
+							<div style=margin-bottom:10px;>Nama Pemilik Rekening</div>
+							<div style=margin-bottom:10px;display:flex;>
+								<input placeholder="Masukan nama pemilik rekening" id=rekname value="${param.rekname}" readonly>
+							</div>
+						</div>
+						<div style=font-size:12px;>
+							<div style=margin-bottom:10px;>Bank Tujuan</div>
+							<div style=margin-bottom:10px;display:flex;>
+								<input value="${param.bank}" readonly>
+							</div>
+						</div>
+						<div style=font-size:12px;>
+							<div style=margin-bottom:10px;>Notes Deposit</div>
+							<div style=margin-bottom:10px;display:flex;>
+								<input value="${param.notes}" readonly>
+							</div>
+						</div>
+						<div style=font-size:12px;>
+							<div style=margin-bottom:10px;>Rek ${param.bank} Digiflazz</div>
+							<div style=margin-bottom:10px;display:flex;>
+								<input value="${param.rekdigi}" readonly>
+							</div>
+						</div>
+						<div>
+							<div><b>*Catatan</b></div>
+							<div style=font-size:12px;margin-top:10px;>
+								Silahkan melakukan transfer ke rekening digi diatas sesuai dengan nominal yang terdisplay. Sertakan catatan diatas, agar proses validasi menjadi lebih mudah.
+							</div>
+						</div>
+					</div>
+				</div>
+			`,
+			close(){
+				app.openDigiDepo();
+				this.remove();
+			},
+			onadded(){
+				this.find('#backbutton').onclick = ()=>{
+					this.close();
+				}
+				this.anim({
+					targets:this,
+					height:['0','95%'],
+					duration:1000
+				})
+			}
+		})
+	},
+	duitkuDisbursement(){
+		return makeElement('div',{
+			className:'smartWidth',
+			style:`
+				background:white;
+				border:1px solid gainsboro;
+				display:flex;
+				flex-direction:column;
+				overflow:hidden;
+				border-radius:10px 10px 0 0;
+			`,
+			innerHTML:`
+				<div style="
+					padding:10px;
+					height:48px;
+					border-bottom:1px solid gainsboro;
+					display:flex;
+					align-items:center;
+					justify-content:center;
+					position:relative;
+				">
+					<div style="
+						position: absolute;
+				    left: 10px;
+				    padding: 10px;
+				    width: 32px;
+				    height: 32px;
+				    cursor:pointer;
+					" id=backbutton>
+						<img src=./more/media/back.png>
+					</div>
+					<div>Duitku Tarik Saldo</div>
+				</div>
+				<div style="
+					height:100%;
+					overflow:auto;
+					padding:10px;
+					background:whitesmoke;
+				" id=pplace>
+					<div style="
+						padding:20px;
+						background:white;
+						border-radius:5px;
+						margin-bottom:5px;
+						border:1px solid gainsboro;
+						display:flex;
+						flex-direction:column;
+						gap:10px;
+					">
+						<div style=font-weight:bold;margin-bottom:20px;>Saldo Duitku</div>
+						<div style=font-size:12px;>
+							<div style=margin-bottom:10px;>Saldo Total</div>
+							<div style=margin-bottom:10px;display:flex;>
+								<input placeholder="Masukan jumlah deposit" id=saldoall value="-" readonly>
+							</div>
+						</div>
+						<div style=font-size:12px;>
+							<div style=margin-bottom:10px;>Settlement Saldo</div>
+							<div style=margin-bottom:10px;display:flex;>
+								<input placeholder="Masukan nama pemilik rekening" id=settlementSaldo value="-" readonly>
+							</div>
+						</div>
+					</div>
+					<div style="
+						padding:20px;
+						background:white;
+						border-radius:5px;
+						margin-bottom:5px;
+						border:1px solid gainsboro;
+						display:flex;
+						flex-direction:column;
+						gap:10px;
+					">
+						<div style=font-weight:bold;margin-bottom:20px;>Tarik Saldo</div>
+						<div style=font-size:12px;>
+							<div style=margin-bottom:10px;>Jumlah Penarikan <span style=font-size:9px;color:red;>*min 10.000</span></div>
+							<div style=margin-bottom:10px;display:flex;>
+								<input placeholder="Masukan jumlah deposit" id=amount value=10000 min="10000" type=number>
+							</div>
+						</div>
+						<div style=font-size:12px;>
+							<div style=margin-bottom:10px;>Bank Tujuan</div>
+							<div style=margin-bottom:10px;display:flex;>
+								<select id=bankCode>
+									<option value=002 selected>BRI</option>
+									<option value=535>SEABANK</option>
+									<option value=008>MANDIRI</option>
+									<option value=009>BNI</option>
+									<option value=014>BCA</option>
+									<option value=013>PERMATA</option>
+									<option value=011>DANAMON</option>
+									<option value=1012>DANA</option>
+									<option value=1011>GOPAY</option>
+									<option value=1013>SHOPEEPAY</option>
+								</select>
+							</div>
+						</div>
+						<div style=font-size:12px;>
+							<div style=margin-bottom:10px;>Bank Account</div>
+							<div style=margin-bottom:10px;display:flex;>
+								<input placeholder="Masukan bank account" id=bankAccount>
+							</div>
+						</div>
+						<div style="
+							padding:15px;
+							border-radius:5px;
+							color:white;
+							background:#8973df;
+							cursor:pointer;text-align:center;
+						" id=processTf>Request Penarikan</div>
+					</div>
+				</div>
+			`,
+			close(){
+				app.topLayer.hide();
+				app.body.style.overflow = 'auto';
+				this.remove();
+			},
+			async getSaldoInfo(){
+				const response = await new Promise((resolve,reject)=>{
+					cOn.get({
+						url:`${app.baseUrl}/duitkubalance`,
+						onload(){
+							resolve(this.getJSONResponse());
+						}
+					})
+				})
+				if(!response.valid)
+					return app.showWarnings(response.message);
+				this.saldoall.value = `Rp ${getPrice(response.data.balance)}`;
+				this.settlementSaldo.value = `Rp ${getPrice(response.data.effectiveBalance)}`;
+			},
+			data:{
+
+			},
+			collectTransferData(){
+				const inputs = ['#bankAccount','#amount','#bankCode'];
+				let valid = true;
+				inputs.forEach((lable)=>{
+					const input = this.find(lable);
+					this.data[input.id] = input.value;
+					if(!input.value.length)
+						valid = false;
+				})
+				if(!valid)
+					return app.showWarnings('Mohon isi data dengan benar!');
+				console.log(this.data);
+			},
+			async requestTransferSaldo(){
+				this.collectTransferData();
+				const response = await new Promise((resolve,reject)=>{
+					cOn.post({
+						url:`${app.baseUrl}/disbursement`,
+						someSettings:[['setRequestHeader','content-type','application/json']],
+						data:jsonstr(this.data),
+						onload(){
+							resolve(this.getJSONResponse());
+						}
+					})
+				})
+				console.log(response);
+				if(!response.valid)
+					return app.showWarnings(response.message);
+			},
+			onadded(){
+				this.saldoall = this.find('#saldoall');
+				this.settlementSaldo = this.find('#settlementSaldo');
+				this.find('#backbutton').onclick = ()=>{
+					this.close();
+				}
+				this.find('#processTf').onclick = ()=>{
+					this.requestTransferSaldo();
+				}
+				this.anim({
+					targets:this,
+					height:['0','95%'],
+					duration:1000
+				})
+				this.getSaldoInfo();
+			}
+		})
 	}
 }
