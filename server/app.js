@@ -421,7 +421,204 @@ app.post('/dopayment',async (req,res)=>{
 	      res.json({ok:false,message:error.message});
 	    }
 	  });
+})
 
+app.post('/newdigidepo',async (req,res)=>{
+	const digiData = (await db.ref('digiData').get()).val();
+	const url = 'https://api.digiflazz.com/v1/deposit';
+	try{
+		const digiReks = {
+			MANDIRI:'',
+			BRI:'',
+			BNI:'',
+			BCA:''
+		}
+		const response = await axios.post(url,{
+			username:digiData.username,
+			amount:Number(req.fields.amount),
+			Bank:req.fields.bank,
+			owner_name:req.fields.rekname,
+			sign:md5(digiData.username+digiData.devKey+'deposit')
+		})
+		const data = response.data.data;
+		if(data.rc && data.rc === '00'){
+			data.valid = true;
+			data.rekdigi = digiReks[req.fields.bank];
+			Object.assign(data,req.fields);
+		}
+		res.json(data);	
+	}catch(e){
+		const response = {valid:false,message:'Terjadi kesalahan!'};
+		if(e.response)
+			response.message = e.response.data.data.message;
+		res.json(response);
+	}
+})
+
+app.get('/duitkubalance',async (req,res)=>{
+	const duitkuData = (await db.ref('duitkuData').get()).val();
+	const secretKey = duitkuData.disbursementSecret || '';
+	const userId = duitkuData.merchantCode;
+	const email = duitkuData.email || 'gemalagifrominfinitydreams@gmail.com';
+	const timestamp = Math.round(new Date().getTime());
+	const paramSignature = email + timestamp + secretKey;
+
+	const signature = crypto.createHash('sha256').update(paramSignature).digest('hex');
+
+	const params = {
+	  userId,
+	  email,
+	  timestamp,
+	  signature,
+	};
+
+	const paramsString = JSON.stringify(params);
+	// const url = 'https://sandbox.duitku.com/webapi/api/disbursement/checkbalance'; // Sandbox
+	const url = 'https://passport.duitku.com/webapi/api/disbursement/checkbalance'; // Production
+
+	console.log('called');
+	axios.post(url, paramsString, {
+	  headers: {
+	    'Content-Type': 'application/json',
+	    'Content-Length': paramsString.length.toString(),
+	  },
+	  // httpsAgent: { rejectUnauthorized: false }, // Disabling SSL verification (not recommended for production)
+	})
+	  .then(response => {
+	    if (response.status === 200) {
+	      res.json({valid:true,message:'Informasi saldo berhasil di load!',data:response.data});
+	    } else {
+	    	res.json({valid:false,message:'Terjadi kesalahan saat memuat informasi saldo Duitku anda!'});  
+	    }
+	  })
+	  .catch(error => {
+	    console.error(error);
+	    res.json({valid:false,message:'Terjadi kesalahan saat memuat informasi saldo Duitku anda!'});
+	  });
+
+
+})
+
+const requestInquiryOnlineTF = (param,duitkuData)=>{
+	return new Promise(async (resolve,reject)=>{
+		const userId = duitkuData.merchantCode;
+		const secretKey = duitkuData.disbursementSecret;
+		const amountTransfer = param.amount;
+		const bankAccount = param.bankAccount;
+		const bankCode = param.bankCode;
+		const email = duitkuData.email || 'gemalagifrominfinitydreams@gmail.com';
+		const purpose = 'Tarik Uang...';
+		const timestamp = Math.round(new Date().getTime());
+		const senderId = timestamp;
+		const senderName = 'EasyPulsa Admin';
+		const paramSignature = email + timestamp + bankCode + bankAccount + amountTransfer + purpose + secretKey;
+
+		const signature = crypto.createHash('sha256').update(paramSignature).digest('hex');
+
+		const params = {
+		  userId,
+		  amountTransfer,
+		  bankAccount,
+		  bankCode,
+		  email,
+		  purpose,
+		  timestamp,
+		  senderId,
+		  senderName,
+		  signature,
+		};
+
+		const paramsString = JSON.stringify(params);
+		const url = 'https://sandbox.duitku.com/webapi/api/disbursement/inquirysandbox'; // Sandbox
+		// const url = 'https://passport.duitku.com/webapi/api/disbursement/inquiry'; // Production
+
+		try{
+			const response = await axios.post(url, paramsString, {
+			  headers: {
+			    'Content-Type': 'application/json',
+			    'Content-Length': paramsString.length.toString()
+			  },
+			  // httpsAgent: { rejectUnauthorized: false }, // Disabling SSL verification (not recommended for production)
+			});
+	    if (response.status === 200 && response.data.responseCode && response.data.responseCode === '00') {
+	    	const result = response.data;
+	    	result.valid = true;
+	    	result.message = 'Request Berhasil!';
+	    	resolve(result);
+	    } else {
+	      resolve({valid:false,message:'Terjadi kesalahan!'});
+	    }
+		}catch(e){
+			resolve({valid:false,e,message:'Terjadi Kesalahan!'});
+		}
+	})
+}
+const requestOnlineTransfer = (param,inquiryData,duitkuData)=>{
+	return new Promise(async (resolve,reject)=>{
+		const disburseId = inquiryData.disburseId;
+		const secretKey = duitkuData.disbursementSecret;
+		const userId = duitkuData.merchantCode;
+		const email = duitkuData.email;
+		const bankCode = param.bankCode;
+		const bankAccount = param.bankAccount;
+		const amountTransfer = param.amount;
+		const accountName = inquiryData.accountName;
+		const custRefNumber = inquiryData.custRefNumber;
+		const purpose = 'Tarik Uang...';
+		const timestamp = Math.round(new Date().getTime());
+		const paramSignature = email + timestamp + bankCode + bankAccount + accountName + custRefNumber + amountTransfer + purpose + disburseId + secretKey;
+
+		const signature = crypto.createHash('sha256').update(paramSignature).digest('hex');
+
+		const params = {
+		  disburseId,
+		  userId,
+		  email,
+		  bankCode,
+		  bankAccount,
+		  amountTransfer,
+		  accountName,
+		  custRefNumber,
+		  purpose,
+		  timestamp,
+		  signature,
+		};
+
+		const paramsString = JSON.stringify(params);
+		const url = 'https://sandbox.duitku.com/webapi/api/disbursement/transfersandbox'; // Sandbox
+		// const url = 'https://passport.duitku.com/webapi/api/disbursement/transfer'; // Production
+
+		axios.post(url, paramsString, {
+		  headers: {
+		    'Content-Type': 'application/json',
+		    'Content-Length': paramsString.length.toString()
+		  },
+		  // httpsAgent: { rejectUnauthorized: false }, // Disabling SSL verification (not recommended for production)
+		})
+		  .then(response => {
+		    if (response.status === 200 && response.data.responseCode && response.data.responseCode === '00') {
+		      const result = response.data;
+		      result.valid = true;
+		      result.message = 'Request Berhasil!';
+		      resolve(result);
+		    } else {
+		      resolve({valid:false,message:'Terjadi kesalahan!'});
+		    }
+		  })
+		  .catch(error => {
+		    resolve({valid:false,message:'Terjadi kesalahan!'});
+		  });
+
+	})
+}
+
+app.post('/disbursement',async (req,res)=>{
+	const duitkuData = (await db.ref('duitkuData').get()).val();
+	const inquiryData = await requestInquiryOnlineTF(req.fields,duitkuData);
+	if(!inquiryData.valid)
+		return res.json(inquiryData);
+	const onlineTf = await requestOnlineTransfer(req.fields,inquiryData,duitkuData);
+	res.json(onlineTf);
 })
 
 app.get('/orderdetails',async (req,res)=>{
