@@ -7,12 +7,13 @@
 
 /* width */
 ::-webkit-scrollbar {
+  
 }
 
 /* Track */
 ::-webkit-scrollbar-track {
   background: var(--gray);
-width: 0;
+  width: 0;
 }
 
 /* Handle */
@@ -125,7 +126,6 @@ textarea{
   object-fit: cover;
 }
 #menu{
-  height: 48px;
   display: flex;
   justify-content: space-between;
   gap: 10px;
