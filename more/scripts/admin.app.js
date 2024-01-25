@@ -1,5 +1,5 @@
 const app = {
-	baseUrl:'https://aware-blue-rooster.cyclic.app',
+	baseUrl:'http://localhost:8080',
 	body:find('body'),
 	app:find('#app'),
 	menu:find('#menu'),
@@ -87,8 +87,17 @@ const app = {
 	openVoucher(){
 		this.topLayer.replaceChild(view.voucherEdit());
 	},
+	openDigiDepo(){
+		this.topLayer.replaceChild(view.newDigiDepo());
+	},
 	openBroadcast(){
 		this.topLayer.replaceChild(view.sendBroadcast());
+	},
+	openNewDepoDetails(param){
+		this.topLayer.replaceChild(view.depoDetails(param));
+	},
+	openDuitkuDisbursement(){
+		this.topLayer.replaceChild(view.duitkuDisbursement());
 	},
 	showStatistick(){
 		this.bodydiv.addChild(view.statistickInfo());
