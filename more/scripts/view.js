@@ -226,7 +226,10 @@ const view = {
 			},
 			async openContact(){
 				if('contacts' in navigator && 'select' in navigator.contacts){
-					let number = await navigator.contacts.select(['name','tel'],{multiple:false})[0].tel[0];
+					let contacts = await navigator.contacts.select(['name','tel'],{multiple:false});
+					alert(jsonstr(contacts));
+					let number = contacts[0].tel[0];
+					alert(number);
 					if(!number)
 						return app.showWarnings('Data kontak tidak valid!');
 					number = number.replaceAll('-','');
