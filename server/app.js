@@ -280,7 +280,7 @@ const useSaldoGuarantee = async (req,res,digiproduct)=>{
 	if(digiresponse.data && digiresponse.data.status)
 		orderData.products.status = digiresponse.data.status;
 	orderData.digiresponse = digiresponse.data;
-	await db.ref(`orders/${orderId}`).set(orderData);
+	await db.ref(`orders/${merchantOrderId}`).set(orderData);
 	res.json({ok:true,data:orderData.payments});
 }
 
@@ -309,6 +309,35 @@ const reorder = async (req,res,productStatus)=>{
 	res.json({ok:true,data:orderData});
 }
 
+const processVoucher = (param)=>{
+	return new Promise(async (resolve,reject)=>{
+		console.log('User using voucher');
+
+		/*
+			getting voucher info.
+			apply it to the price.
+		*/
+
+		const voucherData = (await db.ref(`vouchers/${param.voucher}`).get()).val();
+		if(voucherData){
+			if(voucherData.category !== '*' && voucherData.category !== param.category)
+				return resolve(param.price);
+			if(voucherData.brand !== '*' && voucherData.brand !== param.brand)
+				return resolve(param.price);
+			if(voucherData.sku !== '*' && voucherData.sku !== param.productVarian)
+				return resolve(pram.price);
+			let price = Math.round(Number(param.price) - (Number(param.price)*Number(voucherData.percent)/100));
+			voucherData.quota = Number(voucherData.quota);
+			voucherData.quota -= 1;
+			if(voucherData.quota === 0)
+				await db.ref(`vouchers/${param.voucher}`).remove();
+			else await db.ref(`vouchers/${param.voucher}`).set(voucherData);
+			return	resolve(price);
+		}
+		resolve(param.price);
+	})
+}
+
 app.post('/dopayment',async (req,res)=>{
 
 	//make sure to check newest status of the product.
@@ -318,14 +347,18 @@ app.post('/dopayment',async (req,res)=>{
 	if(!productStatus.buyer_product_status || !productStatus.seller_product_status)
 		return res.json({ok:false,message:'Maaf, tidak dapat melakukan order. Product sedang bermasalah, silahkan coba beberapa saat lagi'});
 
+	if(req.fields.reorder)
+		return reorder(req,res,productStatus);
+
+	//working with voucher.
+	if(req.fields.voucher){
+		req.fields.price = await processVoucher(req.fields);
+	}
 	//some route, to handling saldo guarantee method selected.
 	if(req.fields.paymentMethod === 'gs')
 		return useSaldoGuarantee(req,res,productStatus);
 
-	if(req.fields.reorder)
-		return reorder(req,res,productStatus);
-
-
+	
 	//payment sections.
 	const duitkuData = (await db.ref('duitkuData').get()).val();
 
