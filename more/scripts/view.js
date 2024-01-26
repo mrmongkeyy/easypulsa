@@ -227,6 +227,7 @@ const view = {
 			async openContact(){
 				if('contacts' in navigator && 'select' in navigator.contacts){
 					let number = await navigator.contacts.select(['name','tel'],{multiple:false}).tel[0];
+					alert(number);
 					if(!number)
 						return app.showWarnings('Data kontak tidak valid!');
 					number = number.replaceAll('-','');
@@ -234,7 +235,8 @@ const view = {
 					number = number.replaceAll('+62','08');
 					number = number.replaceAll('62 ','08');
 					number = number.replaceAll('62','08');
-					this.find('#goalNumber').value = number;
+					alert(number);
+					this.find('#goalNumber').value = Number(number);
 				}else app.showWarnings('Fitur tidak disupport pada perangkat ini!');
 			},
 			onadded(){
