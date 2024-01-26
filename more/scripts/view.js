@@ -235,7 +235,7 @@ const view = {
 					number = number.replaceAll('+628','08');
 					number = number.replaceAll('62 8','08');
 					number = number.replaceAll('628','08');
-					this.find('#goalNumber').value = Number(number);
+					this.find('#goalNumber').value = number;
 				}else app.showWarnings('Fitur tidak disupport pada perangkat ini!');
 			},
 			onadded(){
