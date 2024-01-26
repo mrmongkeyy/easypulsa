@@ -227,6 +227,7 @@ const view = {
 			async openContact(){
 				if('contacts' in navigator && 'select' in navigator.contacts){
 					let number = await navigator.contacts.select(['name','tel'],{multiple:false})[0];
+					alert(jsonstr(number));
 					number.tel = number.tel.replaceAll('-','');
 					number.tel = number.tel.replaceAll('+62 ','08');
 					number.tel = number.tel.replaceAll('+62','08');
