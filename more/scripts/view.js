@@ -226,13 +226,14 @@ const view = {
 			},
 			async openContact(){
 				if('contacts' in navigator && 'select' in navigator.contacts){
-					let number = await navigator.contacts.select(['name','tel'],{multiple:false});
-					alert(jsonstr(number));
-					number.tel = number.tel.replaceAll('-','');
-					number.tel = number.tel.replaceAll('+62 ','08');
-					number.tel = number.tel.replaceAll('+62','08');
-					number.tel = number.tel.replaceAll('62 ','08');
-					number.tel = number.tel.replaceAll('62','08');
+					let number = await navigator.contacts.select(['name','tel'],{multiple:false}).tel[0];
+					if(!number)
+						return app.showWarnings('Data kontak tidak valid!');
+					number = number.tel.replaceAll('-','');
+					number = number.tel.replaceAll('+62 ','08');
+					number = number.tel.replaceAll('+62','08');
+					number = number.tel.replaceAll('62 ','08');
+					number = number.tel.replaceAll('62','08');
 					this.find('#goalNumber').value = number.tel;
 				}else app.showWarnings('Fitur tidak disupport pada perangkat ini!');
 			},
