@@ -226,23 +226,15 @@ const view = {
 			},
 			async openContact(){
 				if('contacts' in navigator && 'select' in navigator.contacts){
-
-					try{
-						let number = await navigator.contacts.select(['name','tel'],{multiple:false});
-						alert(jsonstr(number));
-						if(!number)
-							return app.showWarnings('Data kontak tidak valid!');
-						number = number.replaceAll('-','');
-						number = number.replaceAll('+62 ','08');
-						number = number.replaceAll('+62','08');
-						number = number.replaceAll('62 ','08');
-						number = number.replaceAll('62','08');
-						alert(number);
-						this.find('#goalNumber').value = Number(number);
-					}catch(e){
-						alert(JSON.stringify(e));
-					}
-					
+					let number = await navigator.contacts.select(['name','tel'],{multiple:false})[0].tel[0];
+					if(!number)
+						return app.showWarnings('Data kontak tidak valid!');
+					number = number.replaceAll('-','');
+					number = number.replaceAll('+62 ','08');
+					number = number.replaceAll('+62','08');
+					number = number.replaceAll('62 ','08');
+					number = number.replaceAll('62','08');
+					this.find('#goalNumber').value = Number(number);
 				}else app.showWarnings('Fitur tidak disupport pada perangkat ini!');
 			},
 			onadded(){
