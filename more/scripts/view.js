@@ -227,16 +227,14 @@ const view = {
 			async openContact(){
 				if('contacts' in navigator && 'select' in navigator.contacts){
 					let contacts = await navigator.contacts.select(['name','tel'],{multiple:false});
-					alert(jsonstr(contacts));
 					let number = contacts[0].tel[0];
-					alert(number);
 					if(!number)
 						return app.showWarnings('Data kontak tidak valid!');
 					number = number.replaceAll('-','');
-					number = number.replaceAll('+62 ','08');
-					number = number.replaceAll('+62','08');
-					number = number.replaceAll('62 ','08');
-					number = number.replaceAll('62','08');
+					number = number.replaceAll('+62 8','08');
+					number = number.replaceAll('+628','08');
+					number = number.replaceAll('62 8','08');
+					number = number.replaceAll('628','08');
 					this.find('#goalNumber').value = Number(number);
 				}else app.showWarnings('Fitur tidak disupport pada perangkat ini!');
 			},
