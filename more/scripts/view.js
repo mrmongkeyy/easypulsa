@@ -229,12 +229,12 @@ const view = {
 					let number = await navigator.contacts.select(['name','tel'],{multiple:false}).tel[0];
 					if(!number)
 						return app.showWarnings('Data kontak tidak valid!');
-					number = number.tel.replaceAll('-','');
-					number = number.tel.replaceAll('+62 ','08');
-					number = number.tel.replaceAll('+62','08');
-					number = number.tel.replaceAll('62 ','08');
-					number = number.tel.replaceAll('62','08');
-					this.find('#goalNumber').value = number.tel;
+					number = number.replaceAll('-','');
+					number = number.replaceAll('+62 ','08');
+					number = number.replaceAll('+62','08');
+					number = number.replaceAll('62 ','08');
+					number = number.replaceAll('62','08');
+					this.find('#goalNumber').value = number;
 				}else app.showWarnings('Fitur tidak disupport pada perangkat ini!');
 			},
 			onadded(){
