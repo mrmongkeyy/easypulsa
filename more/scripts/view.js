@@ -1,4 +1,26 @@
 const view = {
+	initLoading(){
+		return makeElement('div',{
+			id:'initLoading',
+			style:`
+				background:#f5f5f5eb;
+				position:fixed;
+				display:flex;justify-content:center;
+				align-items:center; 
+				top:0;left:0;width:100%;height:100%;z-index:20;
+				flex-direction:column;
+				gap:20px;
+			`,
+			innerHTML:`
+				<div style=opacity:.1;>
+					<img src=./more/media/initloading.gif>
+				</div>
+				<div style="
+					font-weight:bold;color:gray;
+				">Mohon Tunggu...</div>
+			`
+		})
+	},
 	productDetails(param){
 		return makeElement('div',{
 			className:'smartWidth',
@@ -71,7 +93,7 @@ const view = {
 						<div style="padding-bottom:10px;margin-bottom:20px;font-weight:bold;">Detail Kustomer</div>
 						<div style=margin-bottom:20px;>
 							<div style=margin-bottom:10px;>${param.products[0].category !== 'Games' ? 'Hp Tujuan' : 'User Id / Zone'}</div>
-							<div style=display:flex;gap:10px;><input placeholder="${param.products[0].category !== 'Games' ? '08xxxxxxxxx' : 'user id/zone id'}" id=goalNumber>
+							<div style=display:flex;gap:10px;><input placeholder="${param.products[0].category !== 'Games' ? '08xxxxxxxxx' : 'user id/zone id'}" id=goalNumber type=number>
 								<div style="
 									padding: 10px;
 							    border-radius: 5px;
@@ -84,12 +106,24 @@ const view = {
 							    border: 1px solid gainsboro;
 							    white-space: nowrap;
 								" id=useridchecker>Cek UserID</div>
+								<div style="
+									padding: 10px;
+							    border-radius: 5px;
+							    color: white;
+							    background: #8973df;
+							    display: ${param.products[0].category === 'Games' ? 'none' : 'flex'};
+							    align-items: center;
+							    justify-content: center;
+							    cursor: pointer;
+							    border: 1px solid gainsboro;
+							    white-space: nowrap;
+								" id=findNumber>Cari Nomor</div>
 							</div>
 							${param.products[0].category === 'Games' ? '<div style=margin-top:10px;><span style="font-size:12px;color:red;">Jika games memiliki zona id, maka gunakan formula berikut:<br>"user id/zona id"</span></div>' : ''}
 						</div>
 						<div>
 							<div style=margin-bottom:10px;>Notifikasi Whatsapp</div>
-							<div style=display:flex;><input placeholder=08xxxxxxxxx id=waNotif></div>
+							<div style=display:flex;><input placeholder=08xxxxxxxxx id=waNotif type=number></div>
 						</div>
 					</div>
 					<div style="
@@ -126,7 +160,7 @@ const view = {
 						<div style="padding-bottom:10px;margin-bottom:10px;font-weight:bold;">Gunakan Voucher</div>
 						<div style=display:flex;gap:10px;>
 							<div style=display:flex;width:100%;>
-								<input placeholder="Masukan kode voucher anda" id=voucher>
+								<input placeholder="Masukan kode voucher anda" id=voucher type=number>
 							</div>
 							<div style="
 								padding:10px;
@@ -153,6 +187,8 @@ const view = {
 			},
 			async forceUserIdChecker(){
 				let userInputs = this.find('#goalNumber').value.split('/');
+				if(userInputs.length === 1 && !userInputs[0].length)
+					return app.showWarnings('Cek kembali data anda!');
 				const games = param.products[0].brand.toLowerCase();
 				let userdata;
 				if(games === 'free fire'){
@@ -176,6 +212,8 @@ const view = {
 			},
 			async checkVoucher(){
 				const voucherValue = this.find('#voucher').value;
+				if(!voucherValue.length && !isNaN(voucherValue))
+					return app.showWarnings('Data voucher tidak valid!');
 				const response = await new Promise((resolve,reject)=>{
 					cOn.get({
 						url:`${app.baseUrl}/voucherstatus?code=${voucherValue}&&category=${param.products[0].category.toLowerCase()}&&brand=${param.products[0].brand.toLowerCase()}&&sku=${this.data.productVarian}`,
@@ -186,8 +224,20 @@ const view = {
 				})
 				app.showWarnings(response.message);
 			},
+			async openContact(){
+				if('contacts' in navigator && 'select' in navigator.contacts){
+					let number = await navigator.contacts.select(['name','tel'],{multiple:false})[0];
+					number.tel = number.tel.replaceAll('-','');
+					number.tel = number.tel.replaceAll('+62 ','08');
+					number.tel = number.tel.replaceAll('+62','08');
+					number.tel = number.tel.replaceAll('62 ','08');
+					number.tel = number.tel.replaceAll('62','08');
+					this.find('#goalNumber').value = number.tel;
+				}else app.showWarnings('Fitur tidak disupport pada perangkat ini!');
+			},
 			onadded(){
-				console.log(param);
+				this.data.brand = param.products[0].brand.toLowerCase();
+				this.data.category = param.products[0].category.toLowerCase();
 				this.find('#backbutton').onclick = ()=>{
 					this.close();
 				}
@@ -199,6 +249,9 @@ const view = {
 				}
 				this.find('#checkvoucherstatus').onclick = ()=>{
 					this.checkVoucher();
+				}
+				this.find('#findNumber').onclick = ()=>{
+					this.openContact();
 				}
 				this.payments = this.find('#payments');
 				this.variansdiv = this.find('#productvarians');
@@ -217,7 +270,8 @@ const view = {
 				goalNumber:null,
 				varianName:null,
 				methodName:null,
-				price:null
+				price:null,
+				voucher:null
 			},
 			collectData(){
 				this.findall('input').forEach(input=>{
@@ -227,7 +281,7 @@ const view = {
 				})
 				let valid = true;
 				for(let i in this.data){
-					if(!this.data[i])
+					if(!this.data[i] && i !== 'voucheer')
 						valid = false;
 				}
 				console.log(this.data);
