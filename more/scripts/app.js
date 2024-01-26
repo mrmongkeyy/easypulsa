@@ -1,5 +1,5 @@
 const app = {
-	baseUrl:'https://aware-blue-rooster.cyclic.app',
+	baseUrl:'http://localhost:8080',
 	usernameCheckerUrl:'https://api.kitadigital.my.id/api/game',
 	webtitle:find('title'),
 	headertitle:find('.bigtitle'),
@@ -7,7 +7,7 @@ const app = {
 	homelabel:find('#beranda'),
 	footer:find('#footer'),
 	body:find('body'),
-	development:false,
+	development:true,
 	app:find('#app'),
 	menu:find('#menu'),
 	bodydiv:find('#body'),
@@ -15,6 +15,7 @@ const app = {
 	topLayer:find('#toplayer'),
 	carouselParent:find('.owl-carousel'),
 	async init(){
+		this.openInitLoading();
 		this.provideScurities();
 		await this.handleFrontData();
 		this.menuButtonsInit();
@@ -35,6 +36,13 @@ const app = {
 		this.handleCustomerSupport();
 		//record guest
 		await this.handleVisitor();
+		this.removeInitLoading();
+	},
+	openInitLoading(){
+		this.initLoading = this.body.addChild(view.initLoading());
+	},
+	removeInitLoading(){
+		this.initLoading.remove();
 	},
 	menuButtonsInit(){
 		this.menuButtons.forEach(btn=>{
