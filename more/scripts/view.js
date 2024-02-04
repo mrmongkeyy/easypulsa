@@ -415,7 +415,7 @@ const view = {
 								flex-wrap:wrap;
 							`,
 							innerHTML:`
-								<div><img src="${method.paymentImage}" style="background:white;width:64px;height:64px;object-fit:contain;border:1px solid gainsboro;border-radius:5px;padding:10px;"></div>
+								<div><img src="${method.paymentImage}" style="background:white;width:54px;height:54px;object-fit:contain;border:1px solid gainsboro;border-radius:5px;"></div>
 								<div style=display:flex;gap:10px;flex-direction:column;>
 									<div style=font-size:14px;>${method.paymentName}</div>
 									<div style=font-size:12px;>Rp ${getPrice(Number(method.totalFee) + price)}</div>
